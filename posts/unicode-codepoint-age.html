@@ -1,0 +1,315 @@
+
+<!DOCTYPE html>
+<html lang="english">
+<head>
+  <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,400italic' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" type="text/css" href="https://pandey.github.io/theme/stylesheet/style.min.css">
+
+  <link rel="stylesheet" type="text/css" href="https://pandey.github.io/theme/pygments/github.min.css">
+  <link rel="stylesheet" type="text/css" href="https://pandey.github.io/theme/font-awesome/css/font-awesome.min.css">
+
+
+    <link href="https://pandey.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="pandey.github.io Atom">
+
+
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="" />
+
+
+<meta name="author" content="Anshuman Pandey" />
+<meta name="description" content="I often need to find out when a particular character was encoded in The Unicode Standard. The Unicode Character Database (UCD) has a file called DerivedAge.txt that contains such information. This UCD file provides the Age property for characters, which can be queried to obtain the version of Unicode …" />
+<meta name="keywords" content="">
+<meta property="og:site_name" content="pandey.github.io"/>
+<meta property="og:title" content="How old is a Unicode character?"/>
+<meta property="og:description" content="I often need to find out when a particular character was encoded in The Unicode Standard. The Unicode Character Database (UCD) has a file called DerivedAge.txt that contains such information. This UCD file provides the Age property for characters, which can be queried to obtain the version of Unicode …"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="https://pandey.github.io/posts/unicode-codepoint-age.html"/>
+<meta property="og:type" content="article"/>
+<meta property="article:published_time" content="2017-02-02 00:00:00-06:00"/>
+<meta property="article:modified_time" content=""/>
+<meta property="article:author" content="https://pandey.github.io/author/anshuman-pandey.html">
+<meta property="article:section" content="articles"/>
+<meta property="og:image" content="/images/ap-initials.jpg">
+
+  <title>pandey.github.io &ndash; How old is a Unicode character?</title>
+
+</head>
+<body>
+  <aside>
+    <div>
+      <a href="https://pandey.github.io">
+        <img src="/images/ap-initials.jpg" alt="Anshuman Pandey" title="Anshuman Pandey">
+      </a>
+      <h1><a href="https://pandey.github.io">Anshuman Pandey</a></h1>
+
+
+      <nav>
+        <ul class="list">
+          <li><a href="https://pandey.github.io/pages/news.html#news">News</a></li>
+          <li><a href="https://pandey.github.io/pages/projects.html#projects">Projects</a></li>
+          <li><a href="https://pandey.github.io/pages/talks.html#talks">Talks</a></li>
+
+          <li><a href="https://pandey.github.io/unicode/" target="_blank">unicode</a></li>
+        </ul>
+      </nav>
+
+      <ul class="social">
+        <li><a class="sc-linkedin" href="http://linkedin.com/in/anshuman-pandey" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+        <li><a class="sc-twitter" href="http://twitter.com/anshumanpandey_" target="_blank"><i class="fa fa-twitter"></i></a></li>
+        <li><a class="sc-github" href="http://github.com/pandey" target="_blank"><i class="fa fa-github"></i></a></li>
+      </ul>
+    </div>
+
+
+  </aside>
+  <main>
+
+
+<article class="single">
+  <header>
+    <h1 id="unicode-codepoint-age">How old is a Unicode&nbsp;character?</h1>
+    <p>
+          Posted on Thu 02 February 2017 in <a href="https://pandey.github.io/category/articles.html">articles</a>
+
+
+    </p>
+  </header>
+
+
+  <div>
+    <p>I often need to find out when a particular character was encoded in The 
+Unicode Standard. The Unicode Character Database (<span class="caps">UCD</span>) has 
+a file called <code>DerivedAge.txt</code> that contains such information. This <span class="caps">UCD</span> 
+file provides the <code>Age</code> property for characters, which can be queried 
+to obtain the version of Unicode in which a codepoint was assigned. 
+However, deriving the age of a character from <code>DerivedAge.txt</code> is not 
+so straightforward on account of the file&#8217;s format. Here, I will 
+parse that file and define a new function in order to obtain the 
+necessary data with&nbsp;ease.</p>
+<h2>Understand the&nbsp;data</h2>
+<p>I used <code>DerivedAge.txt</code> in a previous post to explore the 
+<a href="https://pandey.github.io/posts/unicode-growth-UCD-python.html">growth of Unicode</a> 
+in terms of the number of characters added in each version. 
+Recall that the <code>DerivedAge.txt</code> file has the following&nbsp;presentation:</p>
+<div class="highlight"><pre><span></span>    # Age=V1_1
+
+    # Assigned as of Unicode 1.1.0 (June, 1993)
+    # [excluding removed Hangul Syllables]
+
+    0000..001F    ; 1.1 #  [32] &lt;control-0000&gt;..&lt;control-001F&gt;
+    0020..007E    ; 1.1 #  [95] SPACE..TILDE
+    007F..009F    ; 1.1 #  [33] &lt;control-007F&gt;..&lt;control-009F&gt;
+    00A0..00AC    ; 1.1 #  [13] NO-BREAK SPACE..NOT SIGN
+    00AD          ; 1.1 #       SOFT HYPHEN
+</pre></div>
+
+
+<p>In that previous post, I parsed this data and stored it into the 
+<code>derivedage</code> list of lists, which has the following&nbsp;structure:</p>
+<div class="highlight"><pre><span></span><span class="n">derivedage</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>[[&#39;1.1&#39;, &#39;0000..001F&#39;, &#39;32&#39;, &#39;&lt;control-0000&gt;..&lt;control-001F&gt;&#39;],
+ [&#39;1.1&#39;, &#39;0020..007E&#39;, &#39;95&#39;, &#39;SPACE..TILDE&#39;],
+ [&#39;1.1&#39;, &#39;007F..009F&#39;, &#39;33&#39;, &#39;&lt;control-007F&gt;..&lt;control-009F&gt;&#39;],
+ [&#39;1.1&#39;, &#39;00A0..00AC&#39;, &#39;13&#39;, &#39;NO-BREAK SPACE..NOT SIGN&#39;],
+ [&#39;1.1&#39;, &#39;00AD&#39;, &#39;1&#39;, &#39;SOFT HYPHEN&#39;]]
+</pre></div>
+
+
+<p>Notice that the second element contains the codepoint. However, 
+there are actual two types of data masquerading as one. In some lists, 
+the second element is a single codepoint, eg. <span class="caps">00AD</span>, while in others 
+it stands for a range, eg. 00A0..<span class="caps">00AC</span>.</p>
+<h2>Approach the&nbsp;problem</h2>
+<p>The issue becomes clear: searching for a particular codepoint will have 
+one of two results. If the query matches the exact value of the second 
+element, then the <code>Age</code> property is readily available. However, if there 
+is no exact match, then additional processing is&nbsp;necessary.</p>
+<p>There are two ways to approach the&nbsp;task:</p>
+<ol>
+<li>Expand all code ranges to produce entries for each literal&nbsp;codepoint</li>
+<li>Infer codepoint&#8217;s membership within a range of&nbsp;codepoints</li>
+</ol>
+<p>The first approach would require generating new entries for each codepoint in a given&nbsp;range:</p>
+<div class="highlight"><pre><span></span><span class="n">coderange</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;00A0&#39;</span><span class="p">,</span> <span class="s1">&#39;00AC&#39;</span><span class="p">]</span>
+<span class="n">hexlower</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s2">&quot;0x&quot;</span> <span class="o">+</span> <span class="n">coderange</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span>
+<span class="n">hexupper</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s2">&quot;0x&quot;</span> <span class="o">+</span> <span class="n">coderange</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">hexlower</span><span class="p">,</span> <span class="n">hexupper</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)):</span>
+    <span class="k">print</span> <span class="p">(</span><span class="nb">hex</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>0xa0
+0xa1
+0xa2
+0xa3
+0xa4
+0xa5
+0xa6
+0xa7
+0xa8
+0xa9
+0xaa
+0xab
+0xac
+</pre></div>
+
+
+<p>One benefit to this approach is the ability to produce a dictionary that contains every codepoint as a key and it&#8217;s age as the&nbsp;value:</p>
+<div class="highlight"><pre><span></span>derivedage = {
+    &#39;00A0&#39; : &#39;1.1&#39;,
+    &#39;00A1&#39; : &#39;1.1&#39;,
+    ...
+    }
+</pre></div>
+
+
+<p>The downside is that it will significantly expand the dataset as there are more than 160k codepoints as of Unicode version&nbsp;9.0.</p>
+<p>The other approach is to search within a range at runtime and to return the associated&nbsp;age:</p>
+<div class="highlight"><pre><span></span><span class="n">coderange</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;00A0&#39;</span><span class="p">,</span> <span class="s1">&#39;00AC&#39;</span><span class="p">]</span>
+<span class="n">hexlower</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s2">&quot;0x&quot;</span> <span class="o">+</span> <span class="n">coderange</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span>
+<span class="n">hexupper</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s2">&quot;0x&quot;</span> <span class="o">+</span> <span class="n">coderange</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span>
+
+<span class="n">char</span> <span class="o">=</span> <span class="s1">&#39;00A3&#39;</span>
+
+<span class="n">char</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s2">&quot;0x&quot;</span> <span class="o">+</span> <span class="n">char</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">hexlower</span> <span class="o">&lt;=</span> <span class="n">char</span> <span class="o">&lt;=</span> <span class="n">hexupper</span><span class="p">:</span>
+    <span class="k">print</span> <span class="p">(</span><span class="s1">&#39;found&#39;</span><span class="p">,</span> <span class="nb">hex</span><span class="p">(</span><span class="n">char</span><span class="p">),</span> <span class="s1">&#39;within&#39;</span><span class="p">,</span> <span class="nb">hex</span><span class="p">(</span><span class="n">hexlower</span><span class="p">),</span> <span class="s1">&#39;and&#39;</span><span class="p">,</span> <span class="nb">hex</span><span class="p">(</span><span class="n">hexupper</span><span class="p">))</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">print</span> <span class="p">(</span><span class="s1">&#39;not found&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>found 0xa3 within 0xa0 and 0xac
+</pre></div>
+
+
+<h2>Define the&nbsp;function</h2>
+<p>The function relies upon the <code>derivedage</code> container, which is a list of 
+lists with the following&nbsp;structure:</p>
+<div class="highlight"><pre><span></span>[&#39;1.1&#39;, &#39;0020..007E&#39;, &#39;95&#39;, &#39;SPACE..TILDE&#39;]
+</pre></div>
+
+
+<p>For our present purposes, we need to perform an operation on element #2, which is 
+either a single codepoint value or a range of codepoints. If it is a range, then 
+we need to split into two to define the lower and upper&nbsp;bounds:</p>
+<div class="highlight"><pre><span></span>[&#39;0020&#39;, &#39;007E&#39;]
+</pre></div>
+
+
+<p>The function will take a list of 1 or more codepoints. The codepoint is expressed 
+as a string, eg. &#8216;0065&#8217;. For each element in the list, the function will determine 
+if the codepoint scan <code>derivedage</code>:</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">getDerivedAge</span><span class="p">(</span><span class="n">inputlist_</span><span class="p">):</span>
+
+    <span class="n">resultslist</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">codepoint</span> <span class="ow">in</span> <span class="n">inputlist_</span><span class="p">:</span>
+
+        <span class="n">scriptinfo</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">char</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s2">&quot;0x&quot;</span> <span class="o">+</span> <span class="n">codepoint</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">script</span> <span class="ow">in</span> <span class="n">derivedage</span><span class="p">:</span>
+
+            <span class="n">version</span> <span class="o">=</span> <span class="n">script</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">coderange</span> <span class="o">=</span> <span class="n">script</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;..&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">coderange</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+
+                <span class="n">hexlower</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s2">&quot;0x&quot;</span> <span class="o">+</span> <span class="n">coderange</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span>
+                <span class="n">hexupper</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s2">&quot;0x&quot;</span> <span class="o">+</span> <span class="n">coderange</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">hexlower</span> <span class="o">&lt;=</span> <span class="n">char</span> <span class="o">&lt;=</span> <span class="n">hexupper</span><span class="p">:</span>
+                    <span class="n">scriptinfo</span> <span class="o">=</span> <span class="n">version</span>
+
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">coderange</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+
+                <span class="k">if</span> <span class="n">codepoint</span> <span class="o">==</span> <span class="n">coderange</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="n">scriptinfo</span> <span class="o">=</span> <span class="n">version</span>
+
+            <span class="k">else</span><span class="p">:</span>
+
+                <span class="n">scriptinfo</span> <span class="o">=</span> <span class="s1">&#39;Error&#39;</span>
+
+        <span class="n">resultslist</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">codepoint</span> <span class="p">:</span> <span class="n">scriptinfo</span><span class="p">})</span>
+
+    <span class="k">return</span> <span class="n">resultslist</span>
+</pre></div>
+
+
+<h2>Test the&nbsp;function</h2>
+<div class="highlight"><pre><span></span><span class="n">codepoints</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;0035&#39;</span><span class="p">,</span> <span class="s1">&#39;0913&#39;</span><span class="p">,</span> <span class="s1">&#39;A8F0&#39;</span><span class="p">,</span> <span class="s1">&#39;BBBB&#39;</span><span class="p">,</span> <span class="s1">&#39;11080&#39;</span><span class="p">,</span> <span class="s1">&#39;14000&#39;</span><span class="p">]</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">getDerivedAge</span><span class="p">(</span><span class="n">codepoints</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>{&#39;0035&#39;: &#39;1.1&#39;,
+ &#39;0913&#39;: &#39;1.1&#39;,
+ &#39;11080&#39;: &#39;5.2&#39;,
+ &#39;14000&#39;: None,
+ &#39;A8F0&#39;: &#39;5.2&#39;,
+ &#39;BBBB&#39;: &#39;2.0&#39;}
+</pre></div>
+
+
+<p>The function returns the versions in which each of our specified codepoints 
+was encoded. But, we got <code>None</code> for 14000&#8230; is there an error somewhere? 
+Performing a search through <code>DerivedAge.txt</code> for a single codepoint or 
+withinn a range yields nothing. A quick glance at the 
+Unicode Roadmap shows that 14000 is an unencoded codepoint in a block 
+that is tentatively allocated for Egyptian Hieroglyphs. So, there is no 
+character in Unicode associated with this codepoint. The value <code>None</code> 
+is&nbsp;accurate.</p>
+<h1>Assessment</h1>
+<p>The <code>DerivedAge.txt</code> file presents the &#8216;age&#8217; of a codepoint, or 
+the version of Unicode in which it was assigned in the stanard.. 
+When this version information is aggregated with other data in the <span class="caps">UCD</span>, 
+it is possible to generate holistic metadata for codepoints in Unicode. 
+In a future post I will explore the <code>Blocks.txt</code> and <code>Scripts.txt</code> file 
+in order to illustrate how codepoints are grouped within Unicode paradigms 
+of &#8216;blocks&#8217; and&nbsp;&#8216;scripts&#8217;.</p>
+  </div>
+  <div class="tag-cloud">
+    <p>
+    </p>
+  </div>
+
+
+
+
+</article>
+
+    <footer>
+<p>&copy; Anshuman Pandey </p>
+<p>    Powered by <a href="http://getpelican.com" target="_blank">Pelican</a> - <a href="https://github.com/alexandrevicenzi/flex" target="_blank">Flex</a> theme by <a href="http://alexandrevicenzi.com" target="_blank">Alexandre Vicenzi</a>
+</p>    </footer>
+  </main>
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context" : "http://schema.org",
+  "@type" : "Blog",
+  "name": " pandey.github.io ",
+  "url" : "https://pandey.github.io",
+  "image": "/images/ap-initials.jpg",
+  "description": ""
+}
+</script>
+</body>
+</html>

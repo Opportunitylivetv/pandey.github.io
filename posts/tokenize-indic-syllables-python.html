@@ -1,0 +1,605 @@
+
+<!DOCTYPE html>
+<html lang="english">
+<head>
+  <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,400italic' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" type="text/css" href="https://pandey.github.io/theme/stylesheet/style.min.css">
+
+  <link rel="stylesheet" type="text/css" href="https://pandey.github.io/theme/pygments/github.min.css">
+  <link rel="stylesheet" type="text/css" href="https://pandey.github.io/theme/font-awesome/css/font-awesome.min.css">
+
+
+    <link href="https://pandey.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="pandey.github.io Atom">
+
+
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="" />
+
+
+<meta name="author" content="Anshuman Pandey" />
+<meta name="description" content="Processing text in non-Latin scripts in Python has become much easier on account of the native support for Unicode in version 3. There are still some challenges, but these are issues related more to individual writing systems than to Python. One such issue is the manner in which strings of …" />
+<meta name="keywords" content="">
+<meta property="og:site_name" content="pandey.github.io"/>
+<meta property="og:title" content="Tokenizing Indic strings by syllables in Python"/>
+<meta property="og:description" content="Processing text in non-Latin scripts in Python has become much easier on account of the native support for Unicode in version 3. There are still some challenges, but these are issues related more to individual writing systems than to Python. One such issue is the manner in which strings of …"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="https://pandey.github.io/posts/tokenize-indic-syllables-python.html"/>
+<meta property="og:type" content="article"/>
+<meta property="article:published_time" content="2016-09-05 00:00:00-05:00"/>
+<meta property="article:modified_time" content=""/>
+<meta property="article:author" content="https://pandey.github.io/author/anshuman-pandey.html">
+<meta property="article:section" content="articles"/>
+<meta property="og:image" content="/images/ap-initials.jpg">
+
+  <title>pandey.github.io &ndash; Tokenizing Indic strings by syllables in Python</title>
+
+</head>
+<body>
+  <aside>
+    <div>
+      <a href="https://pandey.github.io">
+        <img src="/images/ap-initials.jpg" alt="Anshuman Pandey" title="Anshuman Pandey">
+      </a>
+      <h1><a href="https://pandey.github.io">Anshuman Pandey</a></h1>
+
+
+      <nav>
+        <ul class="list">
+          <li><a href="https://pandey.github.io/pages/news.html#news">News</a></li>
+          <li><a href="https://pandey.github.io/pages/projects.html#projects">Projects</a></li>
+          <li><a href="https://pandey.github.io/pages/talks.html#talks">Talks</a></li>
+
+          <li><a href="https://pandey.github.io/unicode/" target="_blank">unicode</a></li>
+        </ul>
+      </nav>
+
+      <ul class="social">
+        <li><a class="sc-linkedin" href="http://linkedin.com/in/anshuman-pandey" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+        <li><a class="sc-twitter" href="http://twitter.com/anshumanpandey_" target="_blank"><i class="fa fa-twitter"></i></a></li>
+        <li><a class="sc-github" href="http://github.com/pandey" target="_blank"><i class="fa fa-github"></i></a></li>
+      </ul>
+    </div>
+
+
+  </aside>
+  <main>
+
+
+<article class="single">
+  <header>
+    <h1 id="tokenize-indic-syllables-python">Tokenizing Indic strings by syllables in&nbsp;Python</h1>
+    <p>
+          Posted on Mon 05 September 2016 in <a href="https://pandey.github.io/category/articles.html">articles</a>
+
+
+    </p>
+  </header>
+
+
+  <div>
+    <p>Processing text in non-Latin scripts in Python has become much easier on account 
+of the native support for Unicode in version 3. There are still some challenges, 
+but these are issues related more to individual writing systems than to Python. 
+One such issue is the manner in which strings of various script typologies are 
+handled. While handling strings in <em>alphabetic</em> systems, such as the Latin 
+script in which this post is written, is relatively straightforward, scripts 
+that have an <em>alpha-syllabic</em> structure often require additional&nbsp;processing. </p>
+<p>For instance, the string &#8220;English&#8221; has the following number of&nbsp;characters:</p>
+<div class="highlight"><pre><span></span><span class="nb">len</span><span class="p">(</span><span class="s1">&#39;English&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>7
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="nb">list</span><span class="p">(</span><span class="s1">&#39;English&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>[&#39;E&#39;, &#39;n&#39;, &#39;g&#39;, &#39;l&#39;, &#39;i&#39;, &#39;s&#39;, &#39;h&#39;]
+</pre></div>
+
+
+<p>Now consider the string &#8216;देवनागरी&#8217;, which contains characters from the Devanagari script, 
+which is part of the large &#8216;Indic&#8217; family of writing&nbsp;systems:</p>
+<div class="highlight"><pre><span></span><span class="nb">len</span><span class="p">(</span><span class="s1">&#39;देवनागरी&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>8
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="nb">list</span><span class="p">(</span><span class="s1">&#39;देवनागरी&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>[&#39;द&#39;, &#39;े&#39;, &#39;व&#39;, &#39;न&#39;, &#39;ा&#39;, &#39;ग&#39;, &#39;र&#39;, &#39;ी&#39;]
+</pre></div>
+
+
+<p>Seems reasonable, doesn&#8217;t it? At some level: yes. For practical purposes:&nbsp;no.</p>
+<p>For Indic scripts, parsing a string by its characters is not as meaningful as it is in Latin. The reason is that Indic scripts are alphasyllabic 
+writing systems, while Latin is an alphabetic system. For alphasyllabic types, 
+instead of individual characters, the basic orthographic unit that carries meaning 
+is the syllable. For effective text processing, the Devanagari string should be analyzed&nbsp;as:</p>
+<div class="highlight"><pre><span></span>[&#39;दे&#39;, &#39;व&#39;, &#39;ना&#39;, &#39;ग&#39;, &#39;री&#39;]
+</pre></div>
+
+
+<p>Let&#8217;s find an approach to tokenize Indic strings by syllables in&nbsp;Python.</p>
+<h2>Approach</h2>
+<p>Import the <code>re</code> module for processing regular&nbsp;expressions.</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">re</span>
+</pre></div>
+
+
+<h3>Define character&nbsp;classes</h3>
+<p>An orthographic syllable may be defined in terms of character classes. Each syllable has a base, which is either an independent vowel letter or consonant letter. One or more combining signs may attach to a base. Analyze the Unicode Devanagari charts and classify&nbsp;characters.</p>
+<div class="highlight"><pre><span></span><span class="n">vowels</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u0904</span><span class="s1">-</span><span class="se">\u0914\u0960</span><span class="s1">-</span><span class="se">\u0961\u0972</span><span class="s1">-</span><span class="se">\u0977</span><span class="s1">&#39;</span>
+<span class="n">consonants</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u0915</span><span class="s1">-</span><span class="se">\u0939\u0958</span><span class="s1">-</span><span class="se">\u095F\u0978</span><span class="s1">-</span><span class="se">\u097C\u097E</span><span class="s1">-</span><span class="se">\u097F</span><span class="s1">&#39;</span>
+<span class="n">glottal</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u097D</span><span class="s1">&#39;</span>
+
+<span class="n">vowel_signs</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u093E</span><span class="s1">-</span><span class="se">\u094C\u093A</span><span class="s1">-</span><span class="se">\u093B\u094E</span><span class="s1">-</span><span class="se">\u094F\u0955</span><span class="s1">-</span><span class="se">\u0957\u1CF8</span><span class="s1">-</span><span class="se">\u1CF9</span><span class="s1">&#39;</span>
+<span class="n">nasals</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u0900</span><span class="s1">-</span><span class="se">\u0902\u1CF2</span><span class="s1">-</span><span class="se">\u1CF6</span><span class="s1">&#39;</span>
+<span class="n">visarga</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u0903</span><span class="s1">&#39;</span>
+<span class="n">nukta</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u093C</span><span class="s1">&#39;</span>
+<span class="n">avagraha</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u093D</span><span class="s1">&#39;</span>
+<span class="n">virama</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u094D</span><span class="s1">&#39;</span>
+
+<span class="n">vedic_signs</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u0951</span><span class="s1">-</span><span class="se">\u0952\u1CD0</span><span class="s1">-</span><span class="se">\u1CE1\u1CED</span><span class="s1">&#39;</span>
+<span class="n">visarga_modifiers</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u1CE2</span><span class="s1">-</span><span class="se">\u1CE8</span><span class="s1">&#39;</span>
+<span class="n">combining</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\uA8E0</span><span class="s1">-</span><span class="se">\uA8F1</span><span class="s1">&#39;</span>
+
+<span class="n">om</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u0950</span><span class="s1">&#39;</span>
+
+<span class="n">accents</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u0953</span><span class="s1">-</span><span class="se">\u0954</span><span class="s1">&#39;</span>
+<span class="n">dandas</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u0964</span><span class="s1">-</span><span class="se">\u0965</span><span class="s1">&#39;</span>
+<span class="n">digits</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u0966</span><span class="s1">-</span><span class="se">\u096F</span><span class="s1">&#39;</span>
+<span class="n">abbreviation</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u0970</span><span class="s1">&#39;</span>
+<span class="n">spacing</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u0971</span><span class="s1">&#39;</span>
+
+<span class="n">vedic_nasals</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\uA8F2</span><span class="s1">-</span><span class="se">\uA8F7\u1CE9</span><span class="s1">-</span><span class="se">\u1CEC\u1CEE</span><span class="s1">-</span><span class="se">\u1CF1</span><span class="s1">&#39;</span>
+<span class="n">fillers</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\uA8F8</span><span class="s1">-</span><span class="se">\uA8F9</span><span class="s1">&#39;</span>
+<span class="n">caret</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\uA8FA</span><span class="s1">&#39;</span>
+<span class="n">headstroke</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\uA8FB</span><span class="s1">&#39;</span>
+
+<span class="n">space</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u0020</span><span class="s1">&#39;</span>
+<span class="n">joiners</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u200C</span><span class="s1">-</span><span class="se">\u200D</span><span class="s1">&#39;</span>
+</pre></div>
+
+
+<h3>Define&nbsp;functions</h3>
+<p><strong>syllabify()</strong> : the basic syllable tokenization&nbsp;function.</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">syllabify</span><span class="p">(</span><span class="n">inputtext</span><span class="p">):</span>
+
+    <span class="n">syllables</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">curr</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="c1"># iterate over each character in the input. if a char belongs to a </span>
+    <span class="c1"># class that can be part of a syllable, then add it to the curr </span>
+    <span class="c1"># buffer. otherwise, output it to syllables[] right away.</span>
+
+    <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">inputtext</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="n">vowels</span> <span class="o">+</span> <span class="n">avagraha</span> <span class="o">+</span> <span class="n">glottal</span> <span class="o">+</span> <span class="n">om</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span><span class="p">,</span> <span class="n">char</span><span class="p">):</span>
+
+            <span class="c1"># need to handle non-initial independent vowel letters,</span>
+            <span class="c1"># avagraha, and om</span>
+
+            <span class="k">if</span> <span class="n">curr</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+                <span class="n">syllables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr</span><span class="p">)</span>
+                <span class="n">curr</span> <span class="o">=</span> <span class="n">char</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span> <span class="o">+</span> <span class="n">char</span>
+
+        <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="n">consonants</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span><span class="p">,</span> <span class="n">char</span><span class="p">):</span>
+
+            <span class="c1"># if last in curr is not virama, output curr as syllable</span>
+            <span class="c1"># else add present consonant to curr</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">curr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">virama</span><span class="p">:</span>
+                <span class="n">syllables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr</span><span class="p">)</span>
+                <span class="n">curr</span> <span class="o">=</span> <span class="n">char</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span> <span class="o">+</span> <span class="n">char</span>
+
+        <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="n">vowel_signs</span> <span class="o">+</span> <span class="n">visarga</span> <span class="o">+</span> <span class="n">vedic_signs</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span><span class="p">,</span> <span class="n">char</span><span class="p">):</span>
+            <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span> <span class="o">+</span> <span class="n">char</span>
+
+        <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="n">visarga_modifiers</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span><span class="p">,</span> <span class="n">char</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">curr</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">curr</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">visarga</span><span class="p">:</span>
+                <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span> <span class="o">+</span> <span class="n">char</span>
+                <span class="n">syllables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr</span><span class="p">)</span>
+                <span class="n">curr</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">syllables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr</span><span class="p">)</span>
+                <span class="n">curr</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+        <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="n">nasals</span> <span class="o">+</span> <span class="n">vedic_nasals</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span><span class="p">,</span> <span class="n">char</span><span class="p">):</span>
+
+            <span class="c1"># if last in curr is a vowel sign, output curr as syllable</span>
+            <span class="c1"># else add present vowel modifier to curr and output as syllable</span>
+
+            <span class="n">vowelsign</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="n">vowel_signs</span> <span class="o">+</span> <span class="s1">&#39;]$&#39;</span><span class="p">,</span> <span class="n">curr</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">vowelsign</span><span class="p">:</span>
+                <span class="n">syllables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr</span><span class="p">)</span>
+                <span class="n">curr</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span> <span class="o">+</span> <span class="n">char</span>
+                <span class="n">syllables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr</span><span class="p">)</span>
+                <span class="n">curr</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+        <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="n">nukta</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span><span class="p">,</span> <span class="n">char</span><span class="p">):</span>
+            <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span> <span class="o">+</span> <span class="n">char</span>
+
+        <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="n">virama</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span><span class="p">,</span> <span class="n">char</span><span class="p">):</span>
+            <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span> <span class="o">+</span> <span class="n">char</span>
+
+        <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="n">digits</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span><span class="p">,</span> <span class="n">char</span><span class="p">):</span>
+            <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span> <span class="o">+</span> <span class="n">char</span>
+
+        <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="n">fillers</span> <span class="o">+</span> <span class="n">headstroke</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span><span class="p">,</span> <span class="n">char</span><span class="p">):</span>
+            <span class="n">syllables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">char</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="n">joiners</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span><span class="p">,</span> <span class="n">char</span><span class="p">):</span>
+            <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span> <span class="o">+</span> <span class="n">char</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+            <span class="c1">#print (&quot;unhandled: &quot; + char + &quot; &quot;, char.encode(&#39;unicode_escape&#39;))</span>
+
+    <span class="c1"># handle remaining curr</span>
+    <span class="k">if</span> <span class="n">curr</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+        <span class="n">syllables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">curr</span><span class="p">)</span>
+        <span class="n">curr</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="c1"># return each syllable as item in a list</span>
+    <span class="k">return</span> <span class="n">syllables</span>
+</pre></div>
+
+
+<p><strong>getSyllables()</strong> : splits input string into words and passes them to&nbsp;syllabify().</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">getSyllables</span><span class="p">(</span><span class="n">inputtext</span><span class="p">):</span>
+
+    <span class="n">word_syllables</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">all_words</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">inputtext</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+
+        <span class="n">word</span> <span class="o">=</span> <span class="n">word</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">word</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;[\s</span><span class="se">\n\u0964\u0965</span><span class="s1">\.]&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">)</span>
+
+        <span class="n">word_syllables</span> <span class="o">=</span> <span class="n">syllabify</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
+        <span class="c1">#number_syllables = len(word_syllables)</span>
+
+        <span class="c1">#joined_syllables = &#39;\u00B7&#39;.join(word_syllables)</span>
+        <span class="n">joined_syllables</span> <span class="o">=</span> <span class="n">word_syllables</span>
+
+        <span class="c1"># make list of lists containing each word</span>
+        <span class="c1">#all_words.append([word, joined_syllables, number_syllables])</span>
+        <span class="n">all_words</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">word</span><span class="p">,</span> <span class="n">joined_syllables</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">all_words</span>
+</pre></div>
+
+
+<p><strong>getSyllableStats()</strong> : get number of unique words and syllables in input&nbsp;text.</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">getSyllableStats</span><span class="p">(</span><span class="n">inputtext</span><span class="p">):</span>
+
+    <span class="n">syllcount</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">wordcount</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">word</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">syllable</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">syllablestatus</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">words</span> <span class="o">=</span> <span class="n">getSyllables</span><span class="p">(</span><span class="n">inputtext</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+
+        <span class="n">word</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">syllables</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1">#count = entry[2]</span>
+
+        <span class="c1">#word_syllables = syllables.split(&#39;\u00B7&#39;)</span>
+        <span class="n">word_syllables</span> <span class="o">=</span> <span class="n">syllables</span>
+
+        <span class="c1"># count all words in input</span>
+        <span class="k">if</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">wordcount</span><span class="p">:</span>
+            <span class="n">wordcount</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">wordcount</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="c1"># count all syllables in input</span>
+        <span class="k">for</span> <span class="n">syll</span> <span class="ow">in</span> <span class="n">word_syllables</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">syll</span> <span class="ow">in</span> <span class="n">syllcount</span><span class="p">:</span>
+                <span class="n">syllcount</span><span class="p">[</span><span class="n">syll</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">syllcount</span><span class="p">[</span><span class="n">syll</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">syllablestatus</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;words&#39;</span> <span class="p">:</span> <span class="n">wordcount</span><span class="p">})</span>
+    <span class="n">syllablestatus</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;syllables&#39;</span> <span class="p">:</span> <span class="n">syllcount</span><span class="p">})</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">syllablestatus</span><span class="p">)</span>
+</pre></div>
+
+
+<h2>Test the&nbsp;functions</h2>
+<p>Some text in&nbsp;Sanskrit</p>
+<div class="highlight"><pre><span></span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;अ॒ग्निमी॑ळे पु॒रोहि॑तं य॒ज्ञस्य॑ दे॒वमृ॒त्विज॑म्। होता॑रं रत्न॒धात॑मम्॥&quot;</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">syllabify</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>[&#39;अ॒&#39;,
+ &#39;ग्नि&#39;,
+ &#39;मी॑&#39;,
+ &#39;ळे&#39;,
+ &#39;पु॒&#39;,
+ &#39;रो&#39;,
+ &#39;हि॑&#39;,
+ &#39;तं&#39;,
+ &#39;य॒&#39;,
+ &#39;ज्ञ&#39;,
+ &#39;स्य॑&#39;,
+ &#39;दे॒&#39;,
+ &#39;व&#39;,
+ &#39;मृ॒&#39;,
+ &#39;त्वि&#39;,
+ &#39;ज॑&#39;,
+ &#39;म्हो&#39;,
+ &#39;ता॑&#39;,
+ &#39;रं&#39;,
+ &#39;र&#39;,
+ &#39;त्न॒&#39;,
+ &#39;धा&#39;,
+ &#39;त॑&#39;,
+ &#39;म&#39;,
+ &#39;म्&#39;]
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">getSyllables</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+    <span class="k">print</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\u00B7</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>अ॒ग्निमी॑ळे : अ॒·ग्नि·मी॑·ळे : 4
+पु॒रोहि॑तं : पु॒·रो·हि॑·तं : 4
+य॒ज्ञस्य॑ : य॒·ज्ञ·स्य॑ : 3
+दे॒वमृ॒त्विज॑म् : दे॒·व·मृ॒·त्वि·ज॑·म् : 6
+होता॑रं : हो·ता॑·रं : 3
+रत्न॒धात॑मम् : र·त्न॒·धा·त॑·म·म् : 6
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">HTML</span><span class="p">,</span> <span class="n">display</span>
+<span class="kn">import</span> <span class="nn">tabulate</span>
+<span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="n">tabulate</span><span class="o">.</span><span class="n">tabulate</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">tablefmt</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">)))</span>
+</pre></div>
+
+
+<table>
+<tbody>
+<tr><td>अ॒ग्निमी॑ळे </td><td>[&#8216;अ॒&#8217;, &#8216;ग्नि&#8217;, &#8216;मी॑&#8217;, &#8216;ळे&#8217;]         </td></tr>
+<tr><td>पु॒रोहि॑तं  </td><td>[&#8216;पु॒&#8217;, &#8216;रो&#8217;, &#8216;हि॑&#8217;, &#8216;तं&#8217;]          </td></tr>
+<tr><td>य॒ज्ञस्य॑   </td><td>[&#8216;य॒&#8217;, &#8216;ज्ञ&#8217;, &#8216;स्य॑&#8217;]               </td></tr>
+<tr><td>दे॒वमृ॒त्विज॑म्</td><td>[&#8216;दे॒&#8217;, &#8216;व&#8217;, &#8216;मृ॒&#8217;, &#8216;त्वि&#8217;, &#8216;ज॑&#8217;, &#8216;म्&#8217;]</td></tr>
+<tr><td>होता॑रं   </td><td>[&#8216;हो&#8217;, &#8216;ता॑&#8217;, &#8216;रं&#8217;]               </td></tr>
+<tr><td>रत्न॒धात॑मम्</td><td>[&#8216;र&#8217;, &#8216;त्न॒&#8217;, &#8216;धा&#8217;, &#8216;त॑&#8217;, &#8216;म&#8217;, &#8216;म्&#8217;]</td></tr>
+</tbody>
+</table>
+
+<div class="highlight"><pre><span></span><span class="n">stats</span> <span class="o">=</span> <span class="n">getSyllableStats</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">stats</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="k">print</span> <span class="p">(</span><span class="n">k</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">print</span> <span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="k">print</span> <span class="p">(</span><span class="s2">&quot;total&quot;</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+    <span class="k">print</span> <span class="p">(</span><span class="s2">&quot;unique&quot;</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>words
+     अ॒ग्निमी॑ळे : 1
+     पु॒रोहि॑तं : 1
+     य॒ज्ञस्य॑ : 1
+     दे॒वमृ॒त्विज॑म् : 1
+     होता॑रं : 1
+     रत्न॒धात॑मम् : 1
+total words = 6
+unique words = 6
+
+syllables
+     अ॒ : 1
+     ग्नि : 1
+     मी॑ : 1
+     ळे : 1
+     पु॒ : 1
+     रो : 1
+     हि॑ : 1
+     तं : 1
+     य॒ : 1
+     ज्ञ : 1
+     स्य॑ : 1
+     दे॒ : 1
+     व : 1
+     मृ॒ : 1
+     त्वि : 1
+     ज॑ : 1
+     म् : 2
+     हो : 1
+     ता॑ : 1
+     रं : 1
+     र : 1
+     त्न॒ : 1
+     धा : 1
+     त॑ : 1
+     म : 1
+total syllables = 26
+unique syllables = 25
+</pre></div>
+
+
+<p>Some text in&nbsp;Hindi</p>
+<div class="highlight"><pre><span></span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;उन्हें बुद्धि और अन्तरात्मा की देन प्राप्त है और परस्पर उन्हें भाईचारे के भाव से बर्ताव करना चाहिए&quot;</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">getSyllables</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+    <span class="k">print</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\u00B7</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>उन्हें : उ·न्हें : 2
+बुद्धि : बु·द्धि : 2
+और : औ·र : 2
+अन्तरात्मा : अ·न्त·रा·त्मा : 4
+की : की : 1
+देन : दे·न : 2
+प्राप्त : प्रा·प्त : 2
+है : है : 1
+और : औ·र : 2
+परस्पर : प·र·स्प·र : 4
+उन्हें : उ·न्हें : 2
+भाईचारे : भा·ई·चा·रे : 4
+के : के : 1
+भाव : भा·व : 2
+से : से : 1
+बर्ताव : ब·र्ता·व : 3
+करना : क·र·ना : 3
+चाहिए : चा·हि·ए : 3
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">stats</span> <span class="o">=</span> <span class="n">getSyllableStats</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">stats</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="k">print</span> <span class="p">(</span><span class="n">k</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">print</span> <span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="k">print</span> <span class="p">(</span><span class="s2">&quot;total&quot;</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+    <span class="k">print</span> <span class="p">(</span><span class="s2">&quot;unique&quot;</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>words
+     उन्हें : 2
+     बुद्धि : 1
+     और : 2
+     अन्तरात्मा : 1
+     की : 1
+     देन : 1
+     प्राप्त : 1
+     है : 1
+     परस्पर : 1
+     भाईचारे : 1
+     के : 1
+     भाव : 1
+     से : 1
+     बर्ताव : 1
+     करना : 1
+     चाहिए : 1
+total words = 18
+unique words = 16
+
+syllables
+     उ : 2
+     न्हें : 2
+     बु : 1
+     द्धि : 1
+     औ : 2
+     र : 5
+     अ : 1
+     न्त : 1
+     रा : 1
+     त्मा : 1
+     की : 1
+     दे : 1
+     न : 1
+     प्रा : 1
+     प्त : 1
+     है : 1
+     प : 1
+     स्प : 1
+     भा : 2
+     ई : 1
+     चा : 2
+     रे : 1
+     के : 1
+     व : 2
+     से : 1
+     ब : 1
+     र्ता : 1
+     क : 1
+     ना : 1
+     हि : 1
+     ए : 1
+total syllables = 41
+unique syllables = 31
+</pre></div>
+
+
+<h3>Edge&nbsp;cases</h3>
+<p>The presence of <span class="caps">ZWJ</span> or <span class="caps">ZWNJ</span> after virama might suggest the termination of a grapheme&nbsp;cluster.</p>
+<div class="highlight"><pre><span></span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;क्क क्‍क क्‌क&#39;</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">syllabify</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>[&#39;क्क&#39;, &#39;क्\u200d&#39;, &#39;क&#39;, &#39;क्\u200c&#39;, &#39;क&#39;]
+</pre></div>
+
+
+<h2>Next&nbsp;steps</h2>
+<p>The issue with the above approach is that it requires manual definition of character classes. This is suitable for a single script. But, if a use case requires analysis of, say, all twenty-two official languages of India, then there will be a need to handle not just Devanagari, but up to ten additional scripts. The upside is that these additional scripts are based upon the same orthographic structure as Devanagari, but the downside is that each script has its own features. In an upcoming post, I will show how to derive character classes programmatically from the Unicode Character&nbsp;Database.</p>
+  </div>
+  <div class="tag-cloud">
+    <p>
+    </p>
+  </div>
+
+
+
+
+</article>
+
+    <footer>
+<p>&copy; Anshuman Pandey </p>
+<p>    Powered by <a href="http://getpelican.com" target="_blank">Pelican</a> - <a href="https://github.com/alexandrevicenzi/flex" target="_blank">Flex</a> theme by <a href="http://alexandrevicenzi.com" target="_blank">Alexandre Vicenzi</a>
+</p>    </footer>
+  </main>
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context" : "http://schema.org",
+  "@type" : "Blog",
+  "name": " pandey.github.io ",
+  "url" : "https://pandey.github.io",
+  "image": "/images/ap-initials.jpg",
+  "description": ""
+}
+</script>
+</body>
+</html>

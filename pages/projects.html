@@ -1,0 +1,165 @@
+
+<!DOCTYPE html>
+<html lang="english">
+<head>
+  <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,400italic' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" type="text/css" href="https://pandey.github.io/theme/stylesheet/style.min.css">
+
+  <link rel="stylesheet" type="text/css" href="https://pandey.github.io/theme/pygments/github.min.css">
+  <link rel="stylesheet" type="text/css" href="https://pandey.github.io/theme/font-awesome/css/font-awesome.min.css">
+
+
+    <link href="https://pandey.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="pandey.github.io Atom">
+
+
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="" />
+
+
+    <meta name="author" content="Anshuman Pandey" />
+    <meta name="description" content="" />
+<meta property="og:site_name" content="pandey.github.io"/>
+<meta property="og:type" content="blog"/>
+<meta property="og:title" content="pandey.github.io"/>
+<meta property="og:description" content=""/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="https://pandey.github.io"/>
+<meta property="og:image" content="/images/ap-initials.jpg">
+
+  <title>pandey.github.io &ndash; Projects</title>
+
+</head>
+<body>
+  <aside>
+    <div>
+      <a href="https://pandey.github.io">
+        <img src="/images/ap-initials.jpg" alt="Anshuman Pandey" title="Anshuman Pandey">
+      </a>
+      <h1><a href="https://pandey.github.io">Anshuman Pandey</a></h1>
+
+
+      <nav>
+        <ul class="list">
+          <li><a href="https://pandey.github.io/pages/news.html#news">News</a></li>
+          <li><a href="https://pandey.github.io/pages/projects.html#projects">Projects</a></li>
+          <li><a href="https://pandey.github.io/pages/talks.html#talks">Talks</a></li>
+
+          <li><a href="https://pandey.github.io/unicode/" target="_blank">unicode</a></li>
+        </ul>
+      </nav>
+
+      <ul class="social">
+        <li><a class="sc-linkedin" href="http://linkedin.com/in/anshuman-pandey" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+        <li><a class="sc-twitter" href="http://twitter.com/anshumanpandey_" target="_blank"><i class="fa fa-twitter"></i></a></li>
+        <li><a class="sc-github" href="http://github.com/pandey" target="_blank"><i class="fa fa-github"></i></a></li>
+      </ul>
+    </div>
+
+
+  </aside>
+  <main>
+
+
+<article class="single">
+  <header>
+    <h1 id="projects">Projects</h1>
+  </header>
+  <div>
+    <h2>Geolocation</h2>
+<ul>
+<li>
+<p>Nearest Chicago Public&nbsp;Library</p>
+<p><a href="http://pandey.pythonanywhere.com/libraries">pandey.pythonanywhere.com/libraries</a></p>
+<p>I developed this app to explore various geolocation and geocoding libraries. The 
+app provides the location of the Chicago Public Library branch that is nearest 
+to an address specified by the user. I chose this use case because the data 
+set is geographically confined. The app relies on data from the City of Chicago 
+Data Portal. It renders maps and performs geolocation using the Google Maps 
+Javascript <span class="caps">API</span> and the Google Maps Geocoding <span class="caps">API</span>. &#8216;Nearest neighbors&#8217; are 
+determined &#8216;as the crow flies&#8217; using a simple linear distance algorithm, while 
+miles are calculated using Vicenty distance. The default map displays all 
+library locations. After an address is provided, the map displays only the 
+locations of that address and the nearest library. Zoom factor is determined 
+by the miles between these two&nbsp;locations.</p>
+</li>
+</ul>
+<h2>Data&nbsp;Visualization</h2>
+<ul>
+<li>
+<p>Revisualizing the Unicode&nbsp;Roadmap</p>
+<p><a href="http://pandey.pythonanywhere.com/smp">pandey.pythonanywhere.com/smp</a></p>
+<p>I undertook this project in an effort to present a singular view of the Unicode 
+Roadmap to the <span class="caps">SMP</span> that stretches over 90 versions from 2001 to the present, and 
+encompasses 298 entries for scripts / blocks. I produced a web-scraper in Python 
+using requests and beautifulsoup4 to parse each version. The data processing initially 
+relied upon a set of dicts generated from the raw data, but I switched to 
+pandas for greater efficiency. The visualization is similar to a gantt chart 
+and has been plotted using&nbsp;matplotlib.</p>
+</li>
+</ul>
+<h2>Text&nbsp;Processing</h2>
+<ul>
+<li>
+<p>Devanagari Syllable&nbsp;Analyzer</p>
+<p><a href="http://pandey.pythonanywhere.com/devsyll">pandey.pythonanywhere.com/devsyll</a></p>
+<p>A Python implementation of Unicode Standard Annex (<span class="caps">UAX</span>) #29 &#8220;Unicode Text 
+Segmentation&#8221;​, which analyzes grapheme clusters of  Devanagari. Such clusters 
+are synonymous with orthographic syllables of the script. The algorithm will 
+be extended for performing identification of Sanskrit meters using machine learning.
+Note: iOS devices may not correctly or at all display some glyphs on account of 
+known bugs in Apple&#8217;s Devanagari&nbsp;font.</p>
+</li>
+<li>
+<p>Statistical Transliteration of Devanagari to&nbsp;Arabic</p>
+<p><a href="http://pandey.pythonanywhere.com/urdu">pandey.pythonanywhere.com/urdu</a></p>
+<p>Automated transliteration of Devanagari into the Arabic script cannot be 
+performed accurately using rule-based approaches. Not only do the structural 
+differences of the alpha-syllabic system of Devanagari and the abjad system of 
+Arabic pose challenges, but the incongruent character repertoires of the two 
+scripts presents additional hurdles. This Python prototype converts 
+the Urdu/Hindi languages in Devanagari into the Arabic script using both rule-based 
+and simple statistical techniques. The core function is a simple spelling validator. 
+As expected, some Arabic &#8216;corrections&#8217;​ are wrong. An enhancement based upon 
+n-gram analysis using TensorFlow is being&nbsp;developed.</p>
+</li>
+<li>
+<p>Jumble Solver with WordNet&nbsp;Integration</p>
+<p><a href="http://pandey.pythonanywhere.com/jumble">pandey.pythonanywhere.com/jumble</a></p>
+<p>Produces permutations of a scrambled string and validates productions against 
+the WordNet lexicon to return plausible English words and definitions. I coded 
+this as a prototype for a validator of jumbled strings in South Asian languages, 
+which are written in alpha-syllabic scripts. Permutation of text in these 
+languages requires analysis of syllabic tokens instead of individual letters
+as in&nbsp;English.</p>
+</li>
+</ul>
+  </div>
+</article>
+
+    <footer>
+<p>&copy; Anshuman Pandey </p>
+<p>    Powered by <a href="http://getpelican.com" target="_blank">Pelican</a> - <a href="https://github.com/alexandrevicenzi/flex" target="_blank">Flex</a> theme by <a href="http://alexandrevicenzi.com" target="_blank">Alexandre Vicenzi</a>
+</p>    </footer>
+  </main>
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context" : "http://schema.org",
+  "@type" : "Blog",
+  "name": " pandey.github.io ",
+  "url" : "https://pandey.github.io",
+  "image": "/images/ap-initials.jpg",
+  "description": ""
+}
+</script>
+</body>
+</html>

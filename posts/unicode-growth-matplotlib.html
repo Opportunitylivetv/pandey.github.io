@@ -1,0 +1,347 @@
+
+<!DOCTYPE html>
+<html lang="english">
+<head>
+  <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,400italic' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" type="text/css" href="https://pandey.github.io/theme/stylesheet/style.min.css">
+
+  <link rel="stylesheet" type="text/css" href="https://pandey.github.io/theme/pygments/github.min.css">
+  <link rel="stylesheet" type="text/css" href="https://pandey.github.io/theme/font-awesome/css/font-awesome.min.css">
+
+
+    <link href="https://pandey.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="pandey.github.io Atom">
+
+
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="" />
+
+
+<meta name="author" content="Anshuman Pandey" />
+<meta name="description" content="In a previous post, I presented information about the growth of Unicode in terms of the number of codepoints assigned in each version. The data was displayed as text tables using the PrettyTable package. As we are visual beings, I think it would be useful to also present that data …" />
+<meta name="keywords" content="">
+<meta property="og:site_name" content="pandey.github.io"/>
+<meta property="og:title" content="Visualizing the growth of Unicode using matplotlib"/>
+<meta property="og:description" content="In a previous post, I presented information about the growth of Unicode in terms of the number of codepoints assigned in each version. The data was displayed as text tables using the PrettyTable package. As we are visual beings, I think it would be useful to also present that data …"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="https://pandey.github.io/posts/unicode-growth-matplotlib.html"/>
+<meta property="og:type" content="article"/>
+<meta property="article:published_time" content="2017-01-30 00:00:00-06:00"/>
+<meta property="article:modified_time" content=""/>
+<meta property="article:author" content="https://pandey.github.io/author/anshuman-pandey.html">
+<meta property="article:section" content="articles"/>
+<meta property="og:image" content="/images/ap-initials.jpg">
+
+  <title>pandey.github.io &ndash; Visualizing the growth of Unicode using matplotlib</title>
+
+</head>
+<body>
+  <aside>
+    <div>
+      <a href="https://pandey.github.io">
+        <img src="/images/ap-initials.jpg" alt="Anshuman Pandey" title="Anshuman Pandey">
+      </a>
+      <h1><a href="https://pandey.github.io">Anshuman Pandey</a></h1>
+
+
+      <nav>
+        <ul class="list">
+          <li><a href="https://pandey.github.io/pages/news.html#news">News</a></li>
+          <li><a href="https://pandey.github.io/pages/projects.html#projects">Projects</a></li>
+          <li><a href="https://pandey.github.io/pages/talks.html#talks">Talks</a></li>
+
+          <li><a href="https://pandey.github.io/unicode/" target="_blank">unicode</a></li>
+        </ul>
+      </nav>
+
+      <ul class="social">
+        <li><a class="sc-linkedin" href="http://linkedin.com/in/anshuman-pandey" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+        <li><a class="sc-twitter" href="http://twitter.com/anshumanpandey_" target="_blank"><i class="fa fa-twitter"></i></a></li>
+        <li><a class="sc-github" href="http://github.com/pandey" target="_blank"><i class="fa fa-github"></i></a></li>
+      </ul>
+    </div>
+
+
+  </aside>
+  <main>
+
+
+<article class="single">
+  <header>
+    <h1 id="unicode-growth-matplotlib">Visualizing the growth of Unicode using&nbsp;matplotlib</h1>
+    <p>
+          Posted on Mon 30 January 2017 in <a href="https://pandey.github.io/category/articles.html">articles</a>
+
+
+    </p>
+  </header>
+
+
+  <div>
+    <p>In a <a href="posts/unicode-growth-UCD-python.html">previous post</a>, I presented 
+information about the growth of Unicode in terms of the number of 
+codepoints assigned in each version. The data was displayed as text tables 
+using the <code>PrettyTable</code> package. As we are visual beings, I think it would be useful 
+to also present that data using charts. Here I use <code>matplotlib</code> and the same 
+data sets to produce such&nbsp;visualizations.</p>
+<h2>Prerequisites</h2>
+<p>Recall the lists of lists we produced: <code>DA_codepoint_totals</code>, <code>DA_char_totals</code>, 
+and <code>DA_other_totals</code>:</p>
+<p><strong> Growth of codepoints by&nbsp;version: </strong></p>
+<div class="highlight"><pre><span></span><span class="n">DA_codepoint_totals</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>[[&#39;1.1&#39;, 33979, 33979],
+ [&#39;2.0&#39;, 144521, 178500],
+ [&#39;2.1&#39;, 2, 178502],
+ [&#39;3.0&#39;, 10307, 188809],
+ [&#39;3.1&#39;, 44978, 233787],
+ [&#39;3.2&#39;, 1016, 234803],
+ [&#39;4.0&#39;, 1226, 236029],
+ [&#39;4.1&#39;, 1273, 237302],
+ [&#39;5.0&#39;, 1369, 238671],
+ [&#39;5.1&#39;, 1624, 240295],
+ [&#39;5.2&#39;, 6648, 246943],
+ [&#39;6.0&#39;, 2088, 249031],
+ [&#39;6.1&#39;, 732, 249763],
+ [&#39;6.2&#39;, 1, 249764],
+ [&#39;6.3&#39;, 5, 249769],
+ [&#39;7.0&#39;, 2834, 252603],
+ [&#39;8.0&#39;, 7716, 260319],
+ [&#39;9.0&#39;, 7500, 267819]]
+</pre></div>
+
+
+<p><strong> Growth of characters per&nbsp;version: </strong></p>
+<div class="highlight"><pre><span></span><span class="n">DA_char_totals</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>[[&#39;1.1&#39;, 27512, 27512],
+ [&#39;2.0&#39;, 11373, 38885],
+ [&#39;2.1&#39;, 2, 38887],
+ [&#39;3.0&#39;, 10307, 49194],
+ [&#39;3.1&#39;, 44946, 94140],
+ [&#39;3.2&#39;, 1016, 95156],
+ [&#39;4.0&#39;, 1226, 96382],
+ [&#39;4.1&#39;, 1273, 97655],
+ [&#39;5.0&#39;, 1369, 99024],
+ [&#39;5.1&#39;, 1624, 100648],
+ [&#39;5.2&#39;, 6648, 107296],
+ [&#39;6.0&#39;, 2088, 109384],
+ [&#39;6.1&#39;, 732, 110116],
+ [&#39;6.2&#39;, 1, 110117],
+ [&#39;6.3&#39;, 5, 110122],
+ [&#39;7.0&#39;, 2834, 112956],
+ [&#39;8.0&#39;, 7716, 120672],
+ [&#39;9.0&#39;, 7500, 128172]]
+</pre></div>
+
+
+<p><strong> Growth of noncharacters per&nbsp;version: </strong></p>
+<div class="highlight"><pre><span></span><span class="n">DA_other_totals</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>[[&#39;1.1&#39;, 6467, 6467],
+ [&#39;2.0&#39;, 133148, 139615],
+ [&#39;2.1&#39;, 0, 139615],
+ [&#39;3.0&#39;, 0, 139615],
+ [&#39;3.1&#39;, 32, 139647],
+ [&#39;3.2&#39;, 0, 139647],
+ [&#39;4.0&#39;, 0, 139647],
+ [&#39;4.1&#39;, 0, 139647],
+ [&#39;5.0&#39;, 0, 139647],
+ [&#39;5.1&#39;, 0, 139647],
+ [&#39;5.2&#39;, 0, 139647],
+ [&#39;6.0&#39;, 0, 139647],
+ [&#39;6.1&#39;, 0, 139647],
+ [&#39;6.2&#39;, 0, 139647],
+ [&#39;6.3&#39;, 0, 139647],
+ [&#39;7.0&#39;, 0, 139647],
+ [&#39;8.0&#39;, 0, 139647],
+ [&#39;9.0&#39;, 0, 139647]]
+</pre></div>
+
+
+<h2>Approach</h2>
+<p>Import the Python modules needed for this&nbsp;task:</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib.ticker</span> <span class="kn">as</span> <span class="nn">ticker</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">seaborn</span>
+</pre></div>
+
+
+<p>Use Jupyter magic to show plots within the&nbsp;notebook:</p>
+<div class="highlight"><pre><span></span><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+</pre></div>
+
+
+<h3>Plot line&nbsp;graphs</h3>
+<p>The <em>x</em> axis is the <code>arange</code> of the number of versions, not the version number itself. The <em>y</em> axis is the number of characters get values for <em>x</em> and <em>y</em> axes. Convert list of lists to <code>numpy</code> array, then read columms from array into lists: <em>x</em> values from column 0, <em>y</em> values from column 2. Use <code>numpy</code> slice <code>[:,0]</code> to read the matrix by column. Convert <em>y</em> values to type <code>int</code> when&nbsp;slicing.</p>
+<h4>Line graph: number of characters per&nbsp;version</h4>
+<div class="highlight"><pre><span></span><span class="n">char_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">DA_char_totals</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Number of characters encoded in Unicode&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Characters&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Versions&#39;</span><span class="p">)</span>
+
+<span class="n">x_values</span> <span class="o">=</span> <span class="n">char_array</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">x_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_values</span><span class="p">))</span>
+<span class="n">y_values</span> <span class="o">=</span> <span class="n">char_array</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">x_range</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">x_values</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span> <span class="p">(</span><span class="n">x_range</span><span class="p">,</span> <span class="n">y_values</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>[&lt;matplotlib.lines.Line2D at 0x973c610&gt;]
+</pre></div>
+
+
+<p><img alt="image" src="https://pandey.github.io/images/output_71_1.png"></p>
+<p>As we will be plotting two more graphs of the same type and using the same type of container, it is practical to create a function for the above plot&nbsp;type:</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">plot_line_graph</span><span class="p">(</span><span class="n">list_</span><span class="p">,</span> <span class="n">labels_</span><span class="p">):</span>
+
+    <span class="c1"># process parameters</span>
+
+    <span class="n">char_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">list_</span><span class="p">)</span>
+
+    <span class="n">plt_title</span><span class="p">,</span> <span class="n">plt_ylabel</span><span class="p">,</span> <span class="n">plt_xlabel</span> <span class="o">=</span> <span class="n">labels_</span>
+
+    <span class="c1"># set up plot</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">plt_title</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">plt_ylabel</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">plt_xlabel</span><span class="p">)</span>
+
+    <span class="n">x_values</span> <span class="o">=</span> <span class="n">char_array</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">x_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_values</span><span class="p">))</span>
+    <span class="n">y_values</span> <span class="o">=</span> <span class="n">char_array</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">x_range</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">x_values</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span> <span class="p">(</span><span class="n">x_range</span><span class="p">,</span> <span class="n">y_values</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Now we can pass a container and a list of labels to the function to generate additional&nbsp;plots:</p>
+<div class="highlight"><pre><span></span><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Number of characters encoded in Unicode&#39;</span><span class="p">,</span> <span class="s1">&#39;Characters&#39;</span><span class="p">,</span> <span class="s1">&#39;Versions&#39;</span><span class="p">]</span>
+<span class="n">plot_line_graph</span><span class="p">(</span><span class="n">DA_char_totals</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</pre></div>
+
+
+<p><img alt="image" src="https://pandey.github.io/images/output_75_0.png"></p>
+<h4>Line graph: number of other entities per&nbsp;version</h4>
+<div class="highlight"><pre><span></span><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Number of other entities encoded in Unicode&#39;</span><span class="p">,</span> <span class="s1">&#39;Entities&#39;</span><span class="p">,</span> <span class="s1">&#39;Versions&#39;</span><span class="p">]</span>
+<span class="n">plot_line_graph</span><span class="p">(</span><span class="n">DA_other_totals</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</pre></div>
+
+
+<p><img alt="image" src="https://pandey.github.io/images/output_77_0.png"></p>
+<h4>Line graph: number of codepoints assigned per&nbsp;version</h4>
+<div class="highlight"><pre><span></span><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Number of codepoints encoded in Unicode&#39;</span><span class="p">,</span> <span class="s1">&#39;Noncharacters&#39;</span><span class="p">,</span> <span class="s1">&#39;Versions&#39;</span><span class="p">]</span>
+<span class="n">plot_line_graph</span><span class="p">(</span><span class="n">DA_codepoint_totals</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</pre></div>
+
+
+<p><img alt="image" src="https://pandey.github.io/images/output_79_0.png"></p>
+<h3>Plot stacked bar&nbsp;graphs</h3>
+<p>We can also plot the growth of number of characters using a stacked bar graph. Each bar is segmented into smaller categories in order to convey the smaller units that constitute the whole&nbsp;value. </p>
+<p>The <em>x</em> axis is the <code>arange</code> of the number of versions, not the version number itself. We will display the actual version numbers by modifying the labels of the plot. Our stacked bar requires two <em>y</em> values: the first (bottom) is the number of new characters per version, the second (top) is the value from the previous version, or, the difference between the total characters for a given version minus the new characters&nbsp;added.</p>
+<p>We&#8217;ll convert a list of lists to a <code>numpy</code> array, then read columms from the array into lists using <code>numpy</code> slice, eg. <code>[:,0]</code>.</p>
+<h4>Bar graph: growth of number of characters per&nbsp;version</h4>
+<div class="highlight"><pre><span></span><span class="n">char_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">DA_char_totals</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Get the difference between the total characters and the new characters for each version. This is expressed as&nbsp;follows:</p>
+<div class="highlight"><pre><span></span><span class="n">diff_array</span> <span class="o">=</span> <span class="n">char_array</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">-</span> <span class="n">char_array</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Set up the&nbsp;plot:</p>
+<div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">()</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Characters per version&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Number of characters&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Versions&#39;</span><span class="p">)</span>
+
+<span class="n">x_values</span> <span class="o">=</span> <span class="n">char_array</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">x_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_values</span><span class="p">))</span>
+
+<span class="n">y1_values</span> <span class="o">=</span> <span class="n">char_array</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">y2_values</span> <span class="o">=</span> <span class="n">diff_array</span>
+
+<span class="n">y_total</span> <span class="o">=</span> <span class="n">char_array</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span class="n">ticker</span><span class="o">.</span><span class="n">FixedLocator</span><span class="p">(</span><span class="n">x_range</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">ticker</span><span class="o">.</span><span class="n">FixedFormatter</span><span class="p">(</span><span class="n">x_values</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">x_values</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">x_range</span><span class="p">,</span> <span class="n">y1_values</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;New chars&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">x_range</span><span class="p">,</span> <span class="n">y2_values</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="n">y1_values</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;Total chars&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<p><img alt="image" src="https://pandey.github.io/images/output_87_1.png"></p>
+<h2>Commentary</h2>
+<p>This exercise helped us to convert our data from lists into graphs 
+using <code>matplotlib</code>. The text tables I produced in the previous 
+exercise, but the visualizations give us another perspective 
+into the growth of&nbsp;Unicode.</p>
+  </div>
+  <div class="tag-cloud">
+    <p>
+    </p>
+  </div>
+
+
+
+
+</article>
+
+    <footer>
+<p>&copy; Anshuman Pandey </p>
+<p>    Powered by <a href="http://getpelican.com" target="_blank">Pelican</a> - <a href="https://github.com/alexandrevicenzi/flex" target="_blank">Flex</a> theme by <a href="http://alexandrevicenzi.com" target="_blank">Alexandre Vicenzi</a>
+</p>    </footer>
+  </main>
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context" : "http://schema.org",
+  "@type" : "Blog",
+  "name": " pandey.github.io ",
+  "url" : "https://pandey.github.io",
+  "image": "/images/ap-initials.jpg",
+  "description": ""
+}
+</script>
+</body>
+</html>

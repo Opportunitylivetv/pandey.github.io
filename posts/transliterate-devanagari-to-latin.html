@@ -1,0 +1,382 @@
+
+<!DOCTYPE html>
+<html lang="english">
+<head>
+  <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,400italic' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" type="text/css" href="https://pandey.github.io/theme/stylesheet/style.min.css">
+
+  <link rel="stylesheet" type="text/css" href="https://pandey.github.io/theme/pygments/github.min.css">
+  <link rel="stylesheet" type="text/css" href="https://pandey.github.io/theme/font-awesome/css/font-awesome.min.css">
+
+
+    <link href="https://pandey.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="pandey.github.io Atom">
+
+
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="" />
+
+
+<meta name="author" content="Anshuman Pandey" />
+<meta name="description" content="Transliteration between complex scripts and Latin often requires more than a one-to-one mapping table. The underlying difficulty arises from the typology of complex scripts, such as those of the Indic family, which are alpha-syllabic. One issue with transliterating Indic scripts to Latin is handling the inherent a of consonant letters …" />
+<meta name="keywords" content="">
+<meta property="og:site_name" content="pandey.github.io"/>
+<meta property="og:title" content="Python function to transliterate Devanagari"/>
+<meta property="og:description" content="Transliteration between complex scripts and Latin often requires more than a one-to-one mapping table. The underlying difficulty arises from the typology of complex scripts, such as those of the Indic family, which are alpha-syllabic. One issue with transliterating Indic scripts to Latin is handling the inherent a of consonant letters …"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="https://pandey.github.io/posts/transliterate-devanagari-to-latin.html"/>
+<meta property="og:type" content="article"/>
+<meta property="article:published_time" content="2016-09-15 00:00:00-05:00"/>
+<meta property="article:modified_time" content=""/>
+<meta property="article:author" content="https://pandey.github.io/author/anshuman-pandey.html">
+<meta property="article:section" content="articles"/>
+<meta property="og:image" content="/images/ap-initials.jpg">
+
+  <title>pandey.github.io &ndash; Python function to transliterate Devanagari</title>
+
+</head>
+<body>
+  <aside>
+    <div>
+      <a href="https://pandey.github.io">
+        <img src="/images/ap-initials.jpg" alt="Anshuman Pandey" title="Anshuman Pandey">
+      </a>
+      <h1><a href="https://pandey.github.io">Anshuman Pandey</a></h1>
+
+
+      <nav>
+        <ul class="list">
+          <li><a href="https://pandey.github.io/pages/news.html#news">News</a></li>
+          <li><a href="https://pandey.github.io/pages/projects.html#projects">Projects</a></li>
+          <li><a href="https://pandey.github.io/pages/talks.html#talks">Talks</a></li>
+
+          <li><a href="https://pandey.github.io/unicode/" target="_blank">unicode</a></li>
+        </ul>
+      </nav>
+
+      <ul class="social">
+        <li><a class="sc-linkedin" href="http://linkedin.com/in/anshuman-pandey" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+        <li><a class="sc-twitter" href="http://twitter.com/anshumanpandey_" target="_blank"><i class="fa fa-twitter"></i></a></li>
+        <li><a class="sc-github" href="http://github.com/pandey" target="_blank"><i class="fa fa-github"></i></a></li>
+      </ul>
+    </div>
+
+
+  </aside>
+  <main>
+
+
+<article class="single">
+  <header>
+    <h1 id="transliterate-devanagari-to-latin">Python function to transliterate&nbsp;Devanagari</h1>
+    <p>
+          Posted on Thu 15 September 2016 in <a href="https://pandey.github.io/category/articles.html">articles</a>
+
+
+    </p>
+  </header>
+
+
+  <div>
+    <p>Transliteration between complex scripts and Latin often requires 
+more than a one-to-one mapping table. The underlying difficulty 
+arises from the typology of complex scripts, such as those of the 
+Indic family, which are alpha-syllabic. One issue with transliterating 
+Indic scripts to Latin is handling the inherent <em>a</em> of consonant letters. 
+In some contexts, a consonant letter should be transliterated using only 
+the bare consonant, ie. <em>k</em>, <em>kh</em>, <em>g</em>, <em>gh</em>, <em>ṅ</em>, while in others 
+the inherent <em>a</em> is required, ie. <em>ka</em>, <em>kha</em>, <em>ga</em>, <em>gha</em>, <em>ṅa</em>.</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">re</span>
+</pre></div>
+
+
+<h2>Define conversion&nbsp;maps</h2>
+<p>Define mapping table as&nbsp;dictionary:</p>
+<div class="highlight"><pre><span></span><span class="n">conversiontable</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;ॐ&#39;</span> <span class="p">:</span> <span class="s1">&#39;oṁ&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ऀ&#39;</span> <span class="p">:</span> <span class="s1">&#39;ṁ&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ँ&#39;</span> <span class="p">:</span> <span class="s1">&#39;ṃ&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ं&#39;</span> <span class="p">:</span> <span class="s1">&#39;ṃ&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ः&#39;</span> <span class="p">:</span> <span class="s1">&#39;ḥ&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;अ&#39;</span> <span class="p">:</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;आ&#39;</span> <span class="p">:</span> <span class="s1">&#39;ā&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;इ&#39;</span> <span class="p">:</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ई&#39;</span> <span class="p">:</span> <span class="s1">&#39;ī&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;उ&#39;</span> <span class="p">:</span> <span class="s1">&#39;u&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ऊ&#39;</span> <span class="p">:</span> <span class="s1">&#39;ū&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ऋ&#39;</span> <span class="p">:</span> <span class="s1">&#39;r̥&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ॠ&#39;</span> <span class="p">:</span> <span class="s1">&#39; r̥̄&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ऌ&#39;</span> <span class="p">:</span> <span class="s1">&#39;l̥&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ॡ&#39;</span> <span class="p">:</span> <span class="s1">&#39; l̥̄&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ऍ&#39;</span> <span class="p">:</span> <span class="s1">&#39;ê&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ऎ&#39;</span> <span class="p">:</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ए&#39;</span> <span class="p">:</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ऐ&#39;</span> <span class="p">:</span> <span class="s1">&#39;ai&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ऑ&#39;</span> <span class="p">:</span> <span class="s1">&#39;ô&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ऒ&#39;</span> <span class="p">:</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ओ&#39;</span> <span class="p">:</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;औ&#39;</span> <span class="p">:</span> <span class="s1">&#39;au&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ा&#39;</span> <span class="p">:</span> <span class="s1">&#39;ā&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ि&#39;</span> <span class="p">:</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ी&#39;</span> <span class="p">:</span> <span class="s1">&#39;ī&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ु&#39;</span> <span class="p">:</span> <span class="s1">&#39;u&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ू&#39;</span> <span class="p">:</span> <span class="s1">&#39;ū&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ृ&#39;</span> <span class="p">:</span> <span class="s1">&#39;r̥&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ॄ&#39;</span> <span class="p">:</span> <span class="s1">&#39; r̥̄&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ॢ&#39;</span> <span class="p">:</span> <span class="s1">&#39;l̥&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ॣ&#39;</span> <span class="p">:</span> <span class="s1">&#39; l̥̄&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ॅ&#39;</span> <span class="p">:</span> <span class="s1">&#39;ê&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;े&#39;</span> <span class="p">:</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ै&#39;</span> <span class="p">:</span> <span class="s1">&#39;ai&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ॉ&#39;</span> <span class="p">:</span> <span class="s1">&#39;ô&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ो&#39;</span> <span class="p">:</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ौ&#39;</span> <span class="p">:</span> <span class="s1">&#39;au&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;क़&#39;</span> <span class="p">:</span> <span class="s1">&#39;q&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;क&#39;</span> <span class="p">:</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ख़&#39;</span> <span class="p">:</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ख&#39;</span> <span class="p">:</span> <span class="s1">&#39;kh&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ग़&#39;</span> <span class="p">:</span> <span class="s1">&#39;ġ&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ग&#39;</span> <span class="p">:</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ॻ&#39;</span> <span class="p">:</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;घ&#39;</span> <span class="p">:</span> <span class="s1">&#39;gh&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ङ&#39;</span> <span class="p">:</span> <span class="s1">&#39;ṅ&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;च&#39;</span> <span class="p">:</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;छ&#39;</span> <span class="p">:</span> <span class="s1">&#39;ch&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ज़&#39;</span> <span class="p">:</span> <span class="s1">&#39;z&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ज&#39;</span> <span class="p">:</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ॼ&#39;</span> <span class="p">:</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;झ&#39;</span> <span class="p">:</span> <span class="s1">&#39;jh&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ञ&#39;</span> <span class="p">:</span> <span class="s1">&#39;ñ&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ट&#39;</span> <span class="p">:</span> <span class="s1">&#39;ṭ&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ठ&#39;</span> <span class="p">:</span> <span class="s1">&#39;ṭh&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ड़&#39;</span> <span class="p">:</span> <span class="s1">&#39;ṛ&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ड&#39;</span> <span class="p">:</span> <span class="s1">&#39;ḍ&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ॸ&#39;</span> <span class="p">:</span> <span class="s1">&#39;ḍ&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ॾ&#39;</span> <span class="p">:</span> <span class="s1">&#39;d&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ढ़&#39;</span> <span class="p">:</span> <span class="s1">&#39;ṛh&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ढ&#39;</span> <span class="p">:</span> <span class="s1">&#39;ḍh&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ण&#39;</span> <span class="p">:</span> <span class="s1">&#39;ṇ&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;त&#39;</span> <span class="p">:</span> <span class="s1">&#39;t&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;थ&#39;</span> <span class="p">:</span> <span class="s1">&#39;th&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;द&#39;</span> <span class="p">:</span> <span class="s1">&#39;d&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ध&#39;</span> <span class="p">:</span> <span class="s1">&#39;dh&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;न&#39;</span> <span class="p">:</span> <span class="s1">&#39;n&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;प&#39;</span> <span class="p">:</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;फ़&#39;</span> <span class="p">:</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;फ&#39;</span> <span class="p">:</span> <span class="s1">&#39;ph&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ब&#39;</span> <span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ॿ&#39;</span> <span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;भ&#39;</span> <span class="p">:</span> <span class="s1">&#39;bh&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;म&#39;</span> <span class="p">:</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;य&#39;</span> <span class="p">:</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;र&#39;</span> <span class="p">:</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ल&#39;</span> <span class="p">:</span> <span class="s1">&#39;l&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ळ&#39;</span> <span class="p">:</span> <span class="s1">&#39;ḷ&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;व&#39;</span> <span class="p">:</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;श&#39;</span> <span class="p">:</span> <span class="s1">&#39;ś&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ष&#39;</span> <span class="p">:</span> <span class="s1">&#39;ṣ&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;स&#39;</span> <span class="p">:</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ह&#39;</span> <span class="p">:</span> <span class="s1">&#39;h&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ऽ&#39;</span> <span class="p">:</span> <span class="s1">&#39;</span><span class="se">\&#39;</span><span class="s1">&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;्&#39;</span> <span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;़&#39;</span> <span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;०&#39;</span> <span class="p">:</span> <span class="s1">&#39;0&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;१&#39;</span> <span class="p">:</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;२&#39;</span> <span class="p">:</span> <span class="s1">&#39;2&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;३&#39;</span> <span class="p">:</span> <span class="s1">&#39;3&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;४&#39;</span> <span class="p">:</span> <span class="s1">&#39;4&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;५&#39;</span> <span class="p">:</span> <span class="s1">&#39;5&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;६&#39;</span> <span class="p">:</span> <span class="s1">&#39;6&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;७&#39;</span> <span class="p">:</span> <span class="s1">&#39;7&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;८&#39;</span> <span class="p">:</span> <span class="s1">&#39;8&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;९&#39;</span> <span class="p">:</span> <span class="s1">&#39;9&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ꣳ&#39;</span> <span class="p">:</span> <span class="s1">&#39;ṁ&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;।&#39;</span> <span class="p">:</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;॥&#39;</span> <span class="p">:</span> <span class="s1">&#39;..&#39;</span><span class="p">,</span>
+    <span class="s1">&#39; &#39;</span> <span class="p">:</span> <span class="s1">&#39; &#39;</span><span class="p">,</span>
+    <span class="p">}</span>
+</pre></div>
+
+
+<p>Define character&nbsp;classes:</p>
+<div class="highlight"><pre><span></span><span class="n">consonants</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u0915</span><span class="s1">-</span><span class="se">\u0939\u0958</span><span class="s1">-</span><span class="se">\u095F\u0978</span><span class="s1">-</span><span class="se">\u097C\u097E</span><span class="s1">-</span><span class="se">\u097F</span><span class="s1">&#39;</span>
+<span class="n">vowelsigns</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u093E</span><span class="s1">-</span><span class="se">\u094C\u093A</span><span class="s1">-</span><span class="se">\u093B\u094E</span><span class="s1">-</span><span class="se">\u094F\u0955</span><span class="s1">-</span><span class="se">\u0957</span><span class="s1">&#39;</span>
+<span class="n">nukta</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u093C</span><span class="s1">&#39;</span>
+<span class="n">virama</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u094D</span><span class="s1">&#39;</span>
+
+<span class="n">devanagarichars</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\u0900</span><span class="s1">-</span><span class="se">\u097F\u1CD0</span><span class="s1">-</span><span class="se">\u1CFF\uA8E0</span><span class="s1">-</span><span class="se">\uA8FF</span><span class="s1">&#39;</span>
+</pre></div>
+
+
+<h2>Define&nbsp;functions</h2>
+<h3>deva_to_latn()</h3>
+<p>Primary transliteration function. Performs the following general&nbsp;operations:</p>
+<ol>
+<li>Loops over each character in a&nbsp;word</li>
+<li>If character is a Devanagari character, then continue processing, otherwise go to next&nbsp;character</li>
+<li>Most characters can be transliterated by mapping to Latin characters in the <code>conversationtable</code> dictionary. Consonants need additional&nbsp;attention.</li>
+<li>Perform lookahead check to determine if an &#8216;<code>a</code><span class="quo">&#8216;</span> needs to be appended after a&nbsp;consonant.</li>
+</ol>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">deva_to_latn</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+
+    <span class="n">word</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="c1"># define a buffer to store the transliteration</span>
+    <span class="n">curr</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">char</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">word</span><span class="p">):</span>
+
+        <span class="c1"># check if char is a Devanagari character. if true then continue processing.</span>
+        <span class="c1"># otherwise, output char to curr</span>
+
+        <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="n">devanagarichars</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span><span class="p">,</span> <span class="n">char</span><span class="p">):</span>
+
+            <span class="c1"># if char = consonant, then its transliteration is dependent upon various</span>
+            <span class="c1"># factors. need to check if next char = nukta, virama, vowel sign.</span>
+
+            <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="n">consonants</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span><span class="p">,</span> <span class="n">char</span><span class="p">):</span>
+
+                <span class="c1"># check next char</span>
+                <span class="n">nextchar</span> <span class="o">=</span> <span class="n">word</span><span class="p">[(</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">word</span><span class="p">)]</span>
+
+                <span class="k">if</span> <span class="n">nextchar</span><span class="p">:</span>
+
+                    <span class="c1"># if next char = nukta, then add present char and nukta </span>
+                    <span class="c1"># to &#39;cons&#39;. else just add present char. set variable</span>
+                    <span class="c1"># to test for nukta when processing next char</span>
+
+                    <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="n">nukta</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span><span class="p">,</span> <span class="n">nextchar</span><span class="p">):</span>
+                        <span class="n">cons</span> <span class="o">=</span> <span class="n">char</span> <span class="o">+</span> <span class="n">nextchar</span>
+                        <span class="n">nukta_present</span> <span class="o">=</span> <span class="mi">1</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">cons</span> <span class="o">=</span> <span class="n">char</span>
+                        <span class="n">nukta_present</span> <span class="o">=</span> <span class="mi">0</span>
+
+                    <span class="c1"># if present char is nukta, then check next char</span>
+
+                    <span class="k">if</span> <span class="n">nukta_present</span><span class="p">:</span>
+                        <span class="n">nextchar</span> <span class="o">=</span> <span class="n">word</span><span class="p">[(</span><span class="n">index</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">word</span><span class="p">)]</span>
+
+                    <span class="c1"># if next char = combining sign or virama, convert consonant </span>
+                    <span class="c1"># without &quot;a&quot;. else if next char != combining sign or virama, </span>
+                    <span class="c1"># add &quot;a&quot; to consonant</span>
+
+                    <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="n">vowelsigns</span> <span class="o">+</span> <span class="n">virama</span> <span class="o">+</span><span class="s1">&#39;]&#39;</span><span class="p">,</span> <span class="n">nextchar</span><span class="p">):</span>
+                        <span class="n">trans</span> <span class="o">=</span> <span class="n">conversiontable</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cons</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+                        <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span> <span class="o">+</span> <span class="n">trans</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">trans</span> <span class="o">=</span> <span class="n">conversiontable</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cons</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+                        <span class="n">trans</span> <span class="o">=</span> <span class="n">trans</span> <span class="o">+</span> <span class="s2">&quot;a&quot;</span>
+                        <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span> <span class="o">+</span> <span class="n">trans</span>
+
+            <span class="c1"># transliterate all other chars</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">trans</span> <span class="o">=</span> <span class="n">conversiontable</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">char</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+                <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span> <span class="o">+</span> <span class="n">trans</span>
+
+        <span class="c1"># char is not Devanagari. output char to curr</span>
+
+        <span class="k">else</span><span class="p">:</span>
+             <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span> <span class="o">+</span> <span class="n">char</span>
+
+    <span class="k">return</span> <span class="n">curr</span>
+</pre></div>
+
+
+<h3>getLatin()</h3>
+<p>Function that preprocesses Devanagari input and passes it to <code>deva_to_latn()</code></p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">getLatin</span><span class="p">(</span><span class="n">inputtext</span><span class="p">):</span>
+
+    <span class="n">word_syllables</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">all_words</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">inputtext</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+
+        <span class="n">latin_output</span> <span class="o">=</span> <span class="n">deva_to_latn</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
+        <span class="n">all_words</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">latin_output</span><span class="p">)</span>
+        <span class="n">joined_all_words</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">all_words</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">joined_all_words</span>
+</pre></div>
+
+
+<h2>Test transliteration&nbsp;routines</h2>
+<p>Test some Sanskrit text in Devanagari with Vedic &#8216;accents&#8217;. Accents are ignored at&nbsp;present. </p>
+<div class="highlight"><pre><span></span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;अ॒ग्निमी॑ळे पु॒रोहि॑तं य॒ज्ञस्य॑ दे॒वमृ॒त्विज॑म्। होता॑रं रत्न॒धात॑मम्॥&quot;</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">getLatin</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>&#39;agnimīḷe purohitaṃ yajñasya devamr̥tvijam. hotāraṃ ratnadhātamam..&#39;
+</pre></div>
+
+
+<p>Test some Hindi text. Word-final inherent &#8216;<code>a</code><span class="quo">&#8216;</span> is generally not transliterated in modern&nbsp;Hindi.</p>
+<div class="highlight"><pre><span></span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;उन्हें बुद्धि और अन्तरात्मा की देन प्राप्त है और परस्पर उन्हें भाईचारे के भाव से बर्ताव करना चाहिए&quot;</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">getLatin</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>&#39;unheṃ buddhi aura antarātmā kī dena prāpta hai aura paraspara unheṃ bhāīcāre ke bhāva se bartāva karanā cāhie&#39;
+</pre></div>
+
+
+<p>Test some mixed script&nbsp;text.</p>
+<div class="highlight"><pre><span></span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;This is in the देवनागरी script&quot;</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">getLatin</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>&#39;This is in the devanāgarī script&#39;
+</pre></div>
+
+
+<h1>Next&nbsp;steps</h1>
+<p>The <code>deva_to_latn()</code> function can be adapted for transliterating other Indic&nbsp;scripts.</p>
+  </div>
+  <div class="tag-cloud">
+    <p>
+    </p>
+  </div>
+
+
+
+
+</article>
+
+    <footer>
+<p>&copy; Anshuman Pandey </p>
+<p>    Powered by <a href="http://getpelican.com" target="_blank">Pelican</a> - <a href="https://github.com/alexandrevicenzi/flex" target="_blank">Flex</a> theme by <a href="http://alexandrevicenzi.com" target="_blank">Alexandre Vicenzi</a>
+</p>    </footer>
+  </main>
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context" : "http://schema.org",
+  "@type" : "Blog",
+  "name": " pandey.github.io ",
+  "url" : "https://pandey.github.io",
+  "image": "/images/ap-initials.jpg",
+  "description": ""
+}
+</script>
+</body>
+</html>

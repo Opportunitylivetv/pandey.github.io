@@ -1,0 +1,734 @@
+
+<!DOCTYPE html>
+<html lang="english">
+<head>
+  <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,400italic' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" type="text/css" href="https://pandey.github.io/theme/stylesheet/style.min.css">
+
+  <link rel="stylesheet" type="text/css" href="https://pandey.github.io/theme/pygments/github.min.css">
+  <link rel="stylesheet" type="text/css" href="https://pandey.github.io/theme/font-awesome/css/font-awesome.min.css">
+
+
+    <link href="https://pandey.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="pandey.github.io Atom">
+
+
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="" />
+
+
+<meta name="author" content="Anshuman Pandey" />
+<meta name="description" content="How many characters are in Unicode? How many new characters have been added for each version of Unicode? From a programmatic standpoint, figuring out the number of characters published in a given version of Unicode is not as straightforward as one might imagine. While it is true that Unicode contains …" />
+<meta name="keywords" content="">
+<meta property="og:site_name" content="pandey.github.io"/>
+<meta property="og:title" content="Exploring the growth of Unicode using the UCD and Python"/>
+<meta property="og:description" content="How many characters are in Unicode? How many new characters have been added for each version of Unicode? From a programmatic standpoint, figuring out the number of characters published in a given version of Unicode is not as straightforward as one might imagine. While it is true that Unicode contains …"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="https://pandey.github.io/posts/unicode-growth-UCD-python.html"/>
+<meta property="og:type" content="article"/>
+<meta property="article:published_time" content="2017-01-28 00:00:00-06:00"/>
+<meta property="article:modified_time" content=""/>
+<meta property="article:author" content="https://pandey.github.io/author/anshuman-pandey.html">
+<meta property="article:section" content="articles"/>
+<meta property="og:image" content="/images/ap-initials.jpg">
+
+  <title>pandey.github.io &ndash; Exploring the growth of Unicode using the UCD and Python</title>
+
+</head>
+<body>
+  <aside>
+    <div>
+      <a href="https://pandey.github.io">
+        <img src="/images/ap-initials.jpg" alt="Anshuman Pandey" title="Anshuman Pandey">
+      </a>
+      <h1><a href="https://pandey.github.io">Anshuman Pandey</a></h1>
+
+
+      <nav>
+        <ul class="list">
+          <li><a href="https://pandey.github.io/pages/news.html#news">News</a></li>
+          <li><a href="https://pandey.github.io/pages/projects.html#projects">Projects</a></li>
+          <li><a href="https://pandey.github.io/pages/talks.html#talks">Talks</a></li>
+
+          <li><a href="https://pandey.github.io/unicode/" target="_blank">unicode</a></li>
+        </ul>
+      </nav>
+
+      <ul class="social">
+        <li><a class="sc-linkedin" href="http://linkedin.com/in/anshuman-pandey" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+        <li><a class="sc-twitter" href="http://twitter.com/anshumanpandey_" target="_blank"><i class="fa fa-twitter"></i></a></li>
+        <li><a class="sc-github" href="http://github.com/pandey" target="_blank"><i class="fa fa-github"></i></a></li>
+      </ul>
+    </div>
+
+
+  </aside>
+  <main>
+
+
+<article class="single">
+  <header>
+    <h1 id="unicode-growth-UCD-python">Exploring the growth of Unicode using the <span class="caps">UCD</span> and&nbsp;Python</h1>
+    <p>
+          Posted on Sat 28 January 2017 in <a href="https://pandey.github.io/category/articles.html">articles</a>
+
+
+    </p>
+  </header>
+
+
+  <div>
+    <p>How many characters are in Unicode? How many new characters have been added for each version of Unicode? From a programmatic standpoint, figuring out the number of characters published in a given version of Unicode is not as straightforward as one might imagine. While it is true that Unicode contains &#8216;characters&#8217; from writing systems, there are also entities that are not truly &#8216;characters&#8217; in the conventional sense. There are entities such as control characters, private-use characters, surrogates, and even noncharacters. Therefore, to get a sense of the number of entities in Unicode, it is practical to think instead in terms of &#8216;code&nbsp;points&#8217;.</p>
+<p>In this exercise, I process data from the Unicode Character Database (<span class="caps">UCD</span>) in order to produce an overview of the longitudinal growth of Unicode. There are certainly other ways to solve the challenge, my goal is to do so in a programmatic fashion using available data. Specifically, I will explore a <span class="caps">UCD</span> file called <code>DerivedAge.txt</code>, which provides all codepoints assignments for each version, from 1.1 to&nbsp;9.0.</p>
+<p>I will process this file to extract the number of code points in each version of Unicode, and also to distinguish at a high level between characters and other&nbsp;entities.</p>
+<h2>Approach</h2>
+<p>Import the Python modules needed for this&nbsp;task:</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">re</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">prettytable</span> <span class="kn">import</span> <span class="n">PrettyTable</span>
+</pre></div>
+
+
+<h3>Get the&nbsp;data</h3>
+<p>Fetch the plain text file <code>DerivedAge.txt</code> from the Unicode Character Database using <code>requests</code>, and get the text of the <code>requests</code> object using the <code>.text</code> method:</p>
+<div class="highlight"><pre><span></span><span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;http://www.unicode.org/Public/UCD/latest/ucd/DerivedAge.txt&quot;</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span><span class="o">.</span><span class="n">text</span>
+</pre></div>
+
+
+<h3>Inspect the&nbsp;data</h3>
+<div class="highlight"><pre><span></span><span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>106583
+</pre></div>
+
+
+<p>Split the <code>requests</code> text by newline into a list named <code>filestream</code>, then take a slice of the list to get a sense of the&nbsp;data:</p>
+<div class="highlight"><pre><span></span><span class="n">filestream</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">filestream</span><span class="p">[</span><span class="mi">51</span><span class="p">:</span><span class="mi">70</span><span class="p">]:</span>
+    <span class="k">print</span> <span class="p">(</span><span class="n">line</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span># Age=V1_1
+
+# Assigned as of Unicode 1.1.0 (June, 1993)
+# [excluding removed Hangul Syllables]
+
+0000..001F    ; 1.1 #  [32] &lt;control-0000&gt;..&lt;control-001F&gt;
+0020..007E    ; 1.1 #  [95] SPACE..TILDE
+007F..009F    ; 1.1 #  [33] &lt;control-007F&gt;..&lt;control-009F&gt;
+00A0..00AC    ; 1.1 #  [13] NO-BREAK SPACE..NOT SIGN
+00AD          ; 1.1 #       SOFT HYPHEN
+00AE..01F5    ; 1.1 # [328] REGISTERED SIGN..LATIN SMALL LETTER G WITH ACUTE
+01FA..0217    ; 1.1 #  [30] LATIN CAPITAL LETTER A WITH RING ABOVE AND ACUTE..LATIN SMALL LETTER U WITH INVERTED BREVE
+0250..02A8    ; 1.1 #  [89] LATIN SMALL LETTER TURNED A..LATIN SMALL LETTER TC DIGRAPH WITH CURL
+02B0..02DE    ; 1.1 #  [47] MODIFIER LETTER SMALL H..MODIFIER LETTER RHOTIC HOOK
+02E0..02E9    ; 1.1 #  [10] MODIFIER LETTER SMALL GAMMA..MODIFIER LETTER EXTRA-LOW TONE BAR
+0300..0345    ; 1.1 #  [70] COMBINING GRAVE ACCENT..COMBINING GREEK YPOGEGRAMMENI
+0360..0361    ; 1.1 #   [2] COMBINING DOUBLE TILDE..COMBINING DOUBLE INVERTED BREVE
+0374..0375    ; 1.1 #   [2] GREEK NUMERAL SIGN..GREEK LOWER NUMERAL SIGN
+037A          ; 1.1 #       GREEK YPOGEGRAMMENI
+</pre></div>
+
+
+<h3>Observations</h3>
+<p>The file lists the codepoints encoded in each version. It specifies the property <code>Age</code>, which is indicated both as a comment before each group of&nbsp;codepoints</p>
+<div class="highlight"><pre><span></span># Age=V1_1
+</pre></div>
+
+
+<p>and in the data for every code point or range of&nbsp;codepoints:</p>
+<div class="highlight"><pre><span></span>037A          ; 1.1 #       GREEK YPOGEGRAMMENI
+</pre></div>
+
+
+<p>The above record tells us that the character U+037A <span class="caps">GREEK</span> <span class="caps">YPOGRAMMENI</span>, was encoded in Unicode version&nbsp;1.1.</p>
+<p>The total number of code points is given as a comment after the list for each&nbsp;version:</p>
+<div class="highlight"><pre><span></span># Total code points: 33979
+</pre></div>
+
+
+<p>However, the number of <em>codepoints</em> does not tell us about the number of <em>characters</em>, or other entities. Such details are available in <code>DerivedAge.txt</code>, but we will need to obtain them programmatically from the data. First, let&#8217;s take a look at the format and contents of the&nbsp;file.</p>
+<h3>Description of the data&nbsp;format</h3>
+<p>A sample of data in <code>DerivedAge.txt</code>:</p>
+<div class="highlight"><pre><span></span>00A0..00AC    ; 1.1 #  [13] NO-BREAK SPACE..NOT SIGN
+00AD          ; 1.1 #       SOFT HYPHEN
+4E00..9FA5    ; 1.1 # [20902] CJK UNIFIED IDEOGRAPH-4E00..CJK UNIFIED IDEOGRAPH-9FA5
+E000..F8FF    ; 1.1 # [6400] &lt;private-use-E000&gt;..&lt;private-use-F8FF&gt;
+</pre></div>
+
+
+<p>As shown <code>DerivedAge.txt</code> is a <span class="caps">CSV</span>-like flat file. There are two primary fields, separated by a <code>;</code> semi-colon. The information after <code>#</code> may be considered comments, but may be separated into two&nbsp;fields:</p>
+<ul>
+<li>field 0: codepoint or codepoint range for a character or group of contiguous&nbsp;characters</li>
+<li>field 1: version of Unicode in which the character(s) was/were&nbsp;encoded</li>
+<li>field 2: number of codepoints in a range, in square braces, empty if a single&nbsp;codepoint</li>
+<li>field 3: name or names of first and last item in a contiguous group; characters are <span class="caps">UPPERCASE</span>, while noncharacters are lowercase within <code>&lt;</code> &#8230; <code>&gt;</code> delimiters</li>
+</ul>
+<p>The format is generally uniform, apart from inconsistencies in the spacing of fields after <code>#</code>. Field 3 is alloted a length of seven spaces between the # and field 4. In most cases, the <code>[</code>&#8230;<code>]</code> fits within the 7 columns. When the codepoint count is present, there is 1 space between the <code>#</code> and <code>[</code>&#8230;<code>]</code>, and 1 space between <code>[</code>&#8230;<code>]</code> and field 4. If the <code>[</code>&#8230;<code>]</code> takes more than four spaces, then the starting column for the character names are shifted&nbsp;right.</p>
+<h4>Define regex for extracting&nbsp;fields</h4>
+<p>The fields can be extracted using a&nbsp;regex:</p>
+<div class="highlight"><pre><span></span>^([\w\.]*)\s*\; (.*) \#\s+(?:\[(\d*)\])?\s+(.*)
+
+  ^^^^^^^        ^^          ^^^^^^^^^      ^^
+     1            2              3           4
+</pre></div>
+
+
+<p>Four capture groups are&nbsp;defined:</p>
+<ul>
+<li><code>[\w\.]*</code> for the codepoint range or single code&nbsp;point</li>
+<li><code>(.*)</code> for the version&nbsp;number</li>
+<li><code>(?:\[(\d*)\])</code> is a lookahead for [&#8230;] to handle single code&nbsp;point</li>
+<li><code>(.*)</code> for the character&nbsp;name(s)</li>
+</ul>
+<h3>Wrangle the&nbsp;data</h3>
+<p>Now wrangle the data from its native format into a more usable&nbsp;container:</p>
+<div class="highlight"><pre><span></span><span class="n">derivedage</span> <span class="o">=</span> <span class="p">[]</span>
+</pre></div>
+
+
+<p><code>derivedage</code> will be a list of lists with a structure&nbsp;of:</p>
+<div class="highlight"><pre><span></span>[
+  [&#39;version number&#39;, &#39;code point range&#39;, &#39;count&#39;, &#39;character names&#39;]]
+]
+</pre></div>
+
+
+<p>Also, let&#8217;s use a dictionary to capture the <code>Age</code> property values that have been explicitly specified. These values can be used for validating the data that we will derive from the&nbsp;file.</p>
+<div class="highlight"><pre><span></span><span class="n">derivedage_properties</span> <span class="o">=</span> <span class="p">{}</span>
+</pre></div>
+
+
+<p>Now we&#8217;ll read the file line by line, and extract information from&nbsp;lines:</p>
+<div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">filestream</span><span class="p">:</span>
+
+    <span class="c1"># use the regex defined above:</span>
+
+    <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;^([\w\.]*)\s*\; (.*) \#\s+(?:\[(\d*)\])?\s+(.*)&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+
+        <span class="n">m_coderange</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">m_version</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># m.group(3) == None if the (?:\[(\d*)\])? segment of the regex is empty</span>
+
+        <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">m_count</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">m_count</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">m_charname</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+
+        <span class="n">derivedage</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">m_version</span><span class="p">,</span> <span class="n">m_coderange</span><span class="p">,</span> <span class="n">m_count</span><span class="p">,</span> <span class="n">m_charname</span><span class="p">])</span>
+
+
+    <span class="c1"># now capture the age property details:</span>
+
+    <span class="n">age_property_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;\# Age=V(.*)&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+    <span class="n">age_count_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;\# Total code points: (.*)&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">age_property_match</span><span class="p">:</span>
+        <span class="n">age_property</span> <span class="o">=</span> <span class="n">age_property_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">age_property</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;\_&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">age_property</span><span class="p">)</span>
+        <span class="n">derivedage_properties</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">age_property</span> <span class="p">:</span> <span class="mi">0</span><span class="p">})</span>
+
+    <span class="k">if</span> <span class="n">age_count_match</span><span class="p">:</span>
+        <span class="n">age_count</span> <span class="o">=</span> <span class="n">age_count_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">derivedage_properties</span><span class="p">[</span><span class="n">age_property</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">age_count</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Verify <code>derivedage</code>:</p>
+<div class="highlight"><pre><span></span><span class="n">derivedage</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>[[&#39;1.1&#39;, &#39;0000..001F&#39;, &#39;32&#39;, &#39;&lt;control-0000&gt;..&lt;control-001F&gt;&#39;],
+ [&#39;1.1&#39;, &#39;0020..007E&#39;, &#39;95&#39;, &#39;SPACE..TILDE&#39;],
+ [&#39;1.1&#39;, &#39;007F..009F&#39;, &#39;33&#39;, &#39;&lt;control-007F&gt;..&lt;control-009F&gt;&#39;],
+ [&#39;1.1&#39;, &#39;00A0..00AC&#39;, &#39;13&#39;, &#39;NO-BREAK SPACE..NOT SIGN&#39;],
+ [&#39;1.1&#39;, &#39;00AD&#39;, &#39;1&#39;, &#39;SOFT HYPHEN&#39;],
+ [&#39;1.1&#39;,
+  &#39;00AE..01F5&#39;,
+  &#39;328&#39;,
+  &#39;REGISTERED SIGN..LATIN SMALL LETTER G WITH ACUTE&#39;],
+ [&#39;1.1&#39;,
+  &#39;01FA..0217&#39;,
+  &#39;30&#39;,
+  &#39;LATIN CAPITAL LETTER A WITH RING ABOVE AND ACUTE..LATIN SMALL LETTER U WITH INVERTED BREVE&#39;],
+ [&#39;1.1&#39;,
+  &#39;0250..02A8&#39;,
+  &#39;89&#39;,
+  &#39;LATIN SMALL LETTER TURNED A..LATIN SMALL LETTER TC DIGRAPH WITH CURL&#39;],
+ [&#39;1.1&#39;,
+  &#39;02B0..02DE&#39;,
+  &#39;47&#39;,
+  &#39;MODIFIER LETTER SMALL H..MODIFIER LETTER RHOTIC HOOK&#39;],
+ [&#39;1.1&#39;,
+  &#39;02E0..02E9&#39;,
+  &#39;10&#39;,
+  &#39;MODIFIER LETTER SMALL GAMMA..MODIFIER LETTER EXTRA-LOW TONE BAR&#39;]]
+</pre></div>
+
+
+<p>Verify <code>derivedage_summary</code>:</p>
+<div class="highlight"><pre><span></span><span class="n">derivedage_properties</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>{&#39;1.1&#39;: 33979,
+ &#39;2.0&#39;: 144521,
+ &#39;2.1&#39;: 2,
+ &#39;3.0&#39;: 10307,
+ &#39;3.1&#39;: 44978,
+ &#39;3.2&#39;: 1016,
+ &#39;4.0&#39;: 1226,
+ &#39;4.1&#39;: 1273,
+ &#39;5.0&#39;: 1369,
+ &#39;5.1&#39;: 1624,
+ &#39;5.2&#39;: 6648,
+ &#39;6.0&#39;: 2088,
+ &#39;6.1&#39;: 732,
+ &#39;6.2&#39;: 1,
+ &#39;6.3&#39;: 5,
+ &#39;7.0&#39;: 2834,
+ &#39;8.0&#39;: 7716,
+ &#39;9.0&#39;: 7500}
+</pre></div>
+
+
+<h2>Process the&nbsp;data</h2>
+<p>Define dictionaries for capturing the&nbsp;data:</p>
+<div class="highlight"><pre><span></span><span class="n">DA_codepoints</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">DA_chars</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">DA_other</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="n">DA_entities</span> <span class="o">=</span> <span class="p">{}</span>
+</pre></div>
+
+
+<p>Now iterate over the <code>derivedage</code> list of&nbsp;lists:</p>
+<div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">derivedage</span><span class="p">:</span>
+
+    <span class="n">version</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">coderange</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;..&#39;</span><span class="p">)</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">charname</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+    <span class="c1"># 1. get codepoint range. if coderange ==2, get number of codepoints in </span>
+    <span class="c1"># range by subtracting coderange[1] and coderange[0]. the values in </span>
+    <span class="c1"># these lists are string represents of hex codes, so convert them </span>
+    <span class="c1"># to actual hex numbers:</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">coderange</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">range_length</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">coderange</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">coderange</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">coderange</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">range_length</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># 2. store number of total codepoints per version:</span>
+
+    <span class="k">if</span> <span class="n">version</span> <span class="ow">in</span> <span class="n">DA_codepoints</span><span class="p">:</span>
+        <span class="n">DA_codepoints</span><span class="p">[</span><span class="n">version</span><span class="p">]</span> <span class="o">+=</span> <span class="n">range_length</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">DA_codepoints</span><span class="p">[</span><span class="n">version</span><span class="p">]</span> <span class="o">=</span> <span class="n">range_length</span>
+
+
+    <span class="c1"># 3. store number of characters and other codepoints.</span>
+    <span class="c1"># check for codepoint types. noncharacters are identified in </span>
+    <span class="c1"># DerivedAge.txt using descriptions in &lt;..&gt; brackets</span>
+
+    <span class="n">nonchar_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;^\&lt;&#39;</span><span class="p">,</span> <span class="n">charname</span><span class="p">)</span>
+
+    <span class="c1"># if entry is not a character:</span>
+    <span class="k">if</span> <span class="n">nonchar_match</span><span class="p">:</span>
+
+        <span class="c1"># keep a record of the number of noncharacters per version:</span>
+
+        <span class="k">if</span> <span class="n">version</span> <span class="ow">in</span> <span class="n">DA_other</span><span class="p">:</span>
+            <span class="n">DA_other</span><span class="p">[</span><span class="n">version</span><span class="p">]</span> <span class="o">+=</span> <span class="n">range_length</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">DA_other</span><span class="p">[</span><span class="n">version</span><span class="p">]</span> <span class="o">=</span> <span class="n">range_length</span>
+
+    <span class="c1"># if entry is a character:</span>
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="c1"># keep a record of the number of characters per version:</span>
+
+        <span class="k">if</span> <span class="n">version</span> <span class="ow">in</span> <span class="n">DA_chars</span><span class="p">:</span>
+            <span class="n">DA_chars</span><span class="p">[</span><span class="n">version</span><span class="p">]</span> <span class="o">+=</span> <span class="n">range_length</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">DA_chars</span><span class="p">[</span><span class="n">version</span><span class="p">]</span> <span class="o">=</span> <span class="n">range_length</span>
+
+    <span class="c1"># 4. store number of codepoint types per version:</span>
+
+    <span class="n">nonchar_type_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;^\&lt;(\w*)\-&#39;</span><span class="p">,</span> <span class="n">charname</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">nonchar_type_match</span><span class="p">:</span>
+        <span class="n">entity_type</span> <span class="o">=</span> <span class="n">nonchar_type_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">entity_type</span> <span class="o">=</span> <span class="s1">&#39;character&#39;</span>
+
+    <span class="k">if</span> <span class="n">version</span> <span class="ow">in</span> <span class="n">DA_entities</span><span class="p">:</span>               
+        <span class="k">if</span> <span class="n">entity_type</span> <span class="ow">in</span> <span class="n">DA_entities</span><span class="p">[</span><span class="n">version</span><span class="p">]:</span>
+            <span class="n">DA_entities</span><span class="p">[</span><span class="n">version</span><span class="p">][</span><span class="n">entity_type</span><span class="p">]</span> <span class="o">+=</span> <span class="n">range_length</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">DA_entities</span><span class="p">[</span><span class="n">version</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">entity_type</span> <span class="p">:</span> <span class="n">range_length</span><span class="p">})</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">DA_entities</span><span class="p">[</span><span class="n">version</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">entity_type</span> <span class="p">:</span> <span class="n">range_length</span><span class="p">}</span>            
+</pre></div>
+
+
+<h2>Review generated&nbsp;data</h2>
+<p><strong> Get number of codepoints by&nbsp;version:</strong></p>
+<div class="highlight"><pre><span></span><span class="n">DA_codepoints</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>{&#39;1.1&#39;: 33979,
+ &#39;2.0&#39;: 144521,
+ &#39;2.1&#39;: 2,
+ &#39;3.0&#39;: 10307,
+ &#39;3.1&#39;: 44978,
+ &#39;3.2&#39;: 1016,
+ &#39;4.0&#39;: 1226,
+ &#39;4.1&#39;: 1273,
+ &#39;5.0&#39;: 1369,
+ &#39;5.1&#39;: 1624,
+ &#39;5.2&#39;: 6648,
+ &#39;6.0&#39;: 2088,
+ &#39;6.1&#39;: 732,
+ &#39;6.2&#39;: 1,
+ &#39;6.3&#39;: 5,
+ &#39;7.0&#39;: 2834,
+ &#39;8.0&#39;: 7716,
+ &#39;9.0&#39;: 7500}
+</pre></div>
+
+
+<p>Does our codepoint count match the <code>Age</code> property values explicitly given in <code>DerivedAge.txt</code>?:</p>
+<div class="highlight"><pre><span></span><span class="n">DA_codepoints</span> <span class="o">==</span> <span class="n">derivedage_properties</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>True
+</pre></div>
+
+
+<p><strong> Number of new characters per&nbsp;version: </strong></p>
+<div class="highlight"><pre><span></span><span class="n">DA_chars</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>{&#39;1.1&#39;: 27512,
+ &#39;2.0&#39;: 11373,
+ &#39;2.1&#39;: 2,
+ &#39;3.0&#39;: 10307,
+ &#39;3.1&#39;: 44946,
+ &#39;3.2&#39;: 1016,
+ &#39;4.0&#39;: 1226,
+ &#39;4.1&#39;: 1273,
+ &#39;5.0&#39;: 1369,
+ &#39;5.1&#39;: 1624,
+ &#39;5.2&#39;: 6648,
+ &#39;6.0&#39;: 2088,
+ &#39;6.1&#39;: 732,
+ &#39;6.2&#39;: 1,
+ &#39;6.3&#39;: 5,
+ &#39;7.0&#39;: 2834,
+ &#39;8.0&#39;: 7716,
+ &#39;9.0&#39;: 7500}
+</pre></div>
+
+
+<p><strong> Number of new noncharacters per&nbsp;version: </strong></p>
+<div class="highlight"><pre><span></span><span class="n">DA_other</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>{&#39;1.1&#39;: 6467, &#39;2.0&#39;: 133148, &#39;3.1&#39;: 32}
+</pre></div>
+
+
+<p><strong> Breakdown of codepoint types by&nbsp;version </strong></p>
+<div class="highlight"><pre><span></span><span class="n">DA_entities</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>{&#39;1.1&#39;: {&#39;character&#39;: 27512,
+  &#39;control&#39;: 65,
+  &#39;noncharacter&#39;: 2,
+  &#39;private&#39;: 6400},
+ &#39;2.0&#39;: {&#39;character&#39;: 11373,
+  &#39;noncharacter&#39;: 32,
+  &#39;private&#39;: 131068,
+  &#39;surrogate&#39;: 2048},
+ &#39;2.1&#39;: {&#39;character&#39;: 2},
+ &#39;3.0&#39;: {&#39;character&#39;: 10307},
+ &#39;3.1&#39;: {&#39;character&#39;: 44946, &#39;noncharacter&#39;: 32},
+ &#39;3.2&#39;: {&#39;character&#39;: 1016},
+ &#39;4.0&#39;: {&#39;character&#39;: 1226},
+ &#39;4.1&#39;: {&#39;character&#39;: 1273},
+ &#39;5.0&#39;: {&#39;character&#39;: 1369},
+ &#39;5.1&#39;: {&#39;character&#39;: 1624},
+ &#39;5.2&#39;: {&#39;character&#39;: 6648},
+ &#39;6.0&#39;: {&#39;character&#39;: 2088},
+ &#39;6.1&#39;: {&#39;character&#39;: 732},
+ &#39;6.2&#39;: {&#39;character&#39;: 1},
+ &#39;6.3&#39;: {&#39;character&#39;: 5},
+ &#39;7.0&#39;: {&#39;character&#39;: 2834},
+ &#39;8.0&#39;: {&#39;character&#39;: 7716},
+ &#39;9.0&#39;: {&#39;character&#39;: 7500}}
+</pre></div>
+
+
+<h2>Present the&nbsp;data</h2>
+<p>We will use the <code>PrettyTable</code> module to present the data using text&nbsp;tables</p>
+<h3>New codepoints and codepoint types by&nbsp;version</h3>
+<div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">PrettyTable</span><span class="p">([</span><span class="s1">&#39;version&#39;</span><span class="p">,</span> <span class="s1">&#39;new codepoints&#39;</span><span class="p">,</span> <span class="s1">&#39;new chars&#39;</span><span class="p">,</span> <span class="s1">&#39;new other&#39;</span><span class="p">])</span>
+
+<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">DA_codepoints</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">x</span><span class="o">.</span><span class="n">add_row</span><span class="p">([</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">DA_chars</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">),</span> <span class="n">DA_other</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)])</span>
+
+<span class="k">print</span> <span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>+---------+----------------+-----------+-----------+
+| version | new codepoints | new chars | new other |
++---------+----------------+-----------+-----------+
+|   1.1   |     33979      |   27512   |    6467   |
+|   2.0   |     144521     |   11373   |   133148  |
+|   2.1   |       2        |     2     |     -     |
+|   3.0   |     10307      |   10307   |     -     |
+|   3.1   |     44978      |   44946   |     32    |
+|   3.2   |      1016      |    1016   |     -     |
+|   4.0   |      1226      |    1226   |     -     |
+|   4.1   |      1273      |    1273   |     -     |
+|   5.0   |      1369      |    1369   |     -     |
+|   5.1   |      1624      |    1624   |     -     |
+|   5.2   |      6648      |    6648   |     -     |
+|   6.0   |      2088      |    2088   |     -     |
+|   6.1   |      732       |    732    |     -     |
+|   6.2   |       1        |     1     |     -     |
+|   6.3   |       5        |     5     |     -     |
+|   7.0   |      2834      |    2834   |     -     |
+|   8.0   |      7716      |    7716   |     -     |
+|   9.0   |      7500      |    7500   |     -     |
++---------+----------------+-----------+-----------+
+</pre></div>
+
+
+<h3>Growth of codepoints, characters, noncharacters by&nbsp;version</h3>
+<p>Declare three&nbsp;lists:</p>
+<div class="highlight"><pre><span></span><span class="n">DA_char_totals</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">DA_other_totals</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">DA_codepoint_totals</span> <span class="o">=</span> <span class="p">[]</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">count_codepoints</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">count_chars</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">count_other</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="n">z</span> <span class="o">=</span> <span class="n">PrettyTable</span><span class="p">([</span><span class="s1">&#39;version&#39;</span><span class="p">,</span> <span class="s1">&#39;total codepoints&#39;</span><span class="p">,</span> <span class="s1">&#39;total chars&#39;</span><span class="p">,</span> <span class="s1">&#39;total other&#39;</span><span class="p">])</span>
+
+<span class="c1"># for each version in DA_codepoints, get the corresponding values </span>
+<span class="c1"># from DA_chars and DA_other. Produce running count of the values </span>
+<span class="c1"># for each version.</span>
+
+<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">DA_codepoints</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+    <span class="n">count_codepoints</span> <span class="o">+=</span> <span class="n">DA_codepoints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">count_chars</span> <span class="o">+=</span> <span class="n">DA_chars</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">count_other</span> <span class="o">+=</span> <span class="n">DA_other</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">DA_char_totals</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">k</span><span class="p">,</span> <span class="n">DA_chars</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">count_chars</span><span class="p">])</span>
+    <span class="n">DA_other_totals</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">k</span><span class="p">,</span> <span class="n">DA_other</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">count_other</span><span class="p">])</span>
+    <span class="n">DA_codepoint_totals</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">k</span><span class="p">,</span> <span class="n">DA_codepoints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">count_codepoints</span><span class="p">])</span>
+
+    <span class="n">z</span><span class="o">.</span><span class="n">add_row</span><span class="p">([</span><span class="n">k</span><span class="p">,</span> <span class="n">count_codepoints</span><span class="p">,</span> <span class="n">count_chars</span><span class="p">,</span> <span class="n">count_other</span><span class="p">])</span>
+
+<span class="k">print</span> <span class="p">(</span><span class="n">z</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>+---------+------------------+-------------+-------------+
+| version | total codepoints | total chars | total other |
++---------+------------------+-------------+-------------+
+|   1.1   |      33979       |    27512    |     6467    |
+|   2.0   |      178500      |    38885    |    139615   |
+|   2.1   |      178502      |    38887    |    139615   |
+|   3.0   |      188809      |    49194    |    139615   |
+|   3.1   |      233787      |    94140    |    139647   |
+|   3.2   |      234803      |    95156    |    139647   |
+|   4.0   |      236029      |    96382    |    139647   |
+|   4.1   |      237302      |    97655    |    139647   |
+|   5.0   |      238671      |    99024    |    139647   |
+|   5.1   |      240295      |    100648   |    139647   |
+|   5.2   |      246943      |    107296   |    139647   |
+|   6.0   |      249031      |    109384   |    139647   |
+|   6.1   |      249763      |    110116   |    139647   |
+|   6.2   |      249764      |    110117   |    139647   |
+|   6.3   |      249769      |    110122   |    139647   |
+|   7.0   |      252603      |    112956   |    139647   |
+|   8.0   |      260319      |    120672   |    139647   |
+|   9.0   |      267819      |    128172   |    139647   |
++---------+------------------+-------------+-------------+
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">z</span> <span class="o">=</span> <span class="n">PrettyTable</span><span class="p">([</span><span class="s1">&#39;version&#39;</span><span class="p">,</span> <span class="s1">&#39;new codepoints&#39;</span><span class="p">,</span> <span class="s1">&#39;total codepoints&#39;</span><span class="p">])</span>
+
+<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">DA_codepoint_totals</span><span class="p">:</span>
+    <span class="n">z</span><span class="o">.</span><span class="n">add_row</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">e</span><span class="p">])</span>
+
+<span class="k">print</span> <span class="p">(</span><span class="n">z</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>+---------+----------------+------------------+
+| version | new codepoints | total codepoints |
++---------+----------------+------------------+
+|   1.1   |     33979      |      33979       |
+|   2.0   |     144521     |      178500      |
+|   2.1   |       2        |      178502      |
+|   3.0   |     10307      |      188809      |
+|   3.1   |     44978      |      233787      |
+|   3.2   |      1016      |      234803      |
+|   4.0   |      1226      |      236029      |
+|   4.1   |      1273      |      237302      |
+|   5.0   |      1369      |      238671      |
+|   5.1   |      1624      |      240295      |
+|   5.2   |      6648      |      246943      |
+|   6.0   |      2088      |      249031      |
+|   6.1   |      732       |      249763      |
+|   6.2   |       1        |      249764      |
+|   6.3   |       5        |      249769      |
+|   7.0   |      2834      |      252603      |
+|   8.0   |      7716      |      260319      |
+|   9.0   |      7500      |      267819      |
++---------+----------------+------------------+
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">z</span> <span class="o">=</span> <span class="n">PrettyTable</span><span class="p">([</span><span class="s1">&#39;version&#39;</span><span class="p">,</span> <span class="s1">&#39;new chars&#39;</span><span class="p">,</span> <span class="s1">&#39;total chars&#39;</span><span class="p">])</span>
+
+<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">DA_char_totals</span><span class="p">:</span>
+    <span class="n">z</span><span class="o">.</span><span class="n">add_row</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">e</span><span class="p">])</span>
+
+<span class="k">print</span> <span class="p">(</span><span class="n">z</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>+---------+-----------+-------------+
+| version | new chars | total chars |
++---------+-----------+-------------+
+|   1.1   |   27512   |    27512    |
+|   2.0   |   11373   |    38885    |
+|   2.1   |     2     |    38887    |
+|   3.0   |   10307   |    49194    |
+|   3.1   |   44946   |    94140    |
+|   3.2   |    1016   |    95156    |
+|   4.0   |    1226   |    96382    |
+|   4.1   |    1273   |    97655    |
+|   5.0   |    1369   |    99024    |
+|   5.1   |    1624   |    100648   |
+|   5.2   |    6648   |    107296   |
+|   6.0   |    2088   |    109384   |
+|   6.1   |    732    |    110116   |
+|   6.2   |     1     |    110117   |
+|   6.3   |     5     |    110122   |
+|   7.0   |    2834   |    112956   |
+|   8.0   |    7716   |    120672   |
+|   9.0   |    7500   |    128172   |
++---------+-----------+-------------+
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">z</span> <span class="o">=</span> <span class="n">PrettyTable</span><span class="p">([</span><span class="s1">&#39;version&#39;</span><span class="p">,</span> <span class="s1">&#39;new other&#39;</span><span class="p">,</span> <span class="s1">&#39;total other&#39;</span><span class="p">])</span>
+
+<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">DA_other_totals</span><span class="p">:</span>
+    <span class="n">z</span><span class="o">.</span><span class="n">add_row</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">e</span><span class="p">])</span>
+
+<span class="k">print</span> <span class="p">(</span><span class="n">z</span><span class="p">)</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>+---------+-----------+-------------+
+| version | new other | total other |
++---------+-----------+-------------+
+|   1.1   |    6467   |     6467    |
+|   2.0   |   133148  |    139615   |
+|   2.1   |     0     |    139615   |
+|   3.0   |     0     |    139615   |
+|   3.1   |     32    |    139647   |
+|   3.2   |     0     |    139647   |
+|   4.0   |     0     |    139647   |
+|   4.1   |     0     |    139647   |
+|   5.0   |     0     |    139647   |
+|   5.1   |     0     |    139647   |
+|   5.2   |     0     |    139647   |
+|   6.0   |     0     |    139647   |
+|   6.1   |     0     |    139647   |
+|   6.2   |     0     |    139647   |
+|   6.3   |     0     |    139647   |
+|   7.0   |     0     |    139647   |
+|   8.0   |     0     |    139647   |
+|   9.0   |     0     |    139647   |
++---------+-----------+-------------+
+</pre></div>
+
+
+<h2>Commentary</h2>
+<p>This exercise helped us to analyze the number of codepoints added to Unicode over time using 
+<code>DerivedAge.txt</code>. The data provides a high-level overview of the number and types of 
+codepoints that have been assigned. The <span class="caps">UCD</span> contains other data that provide more details on 
+the characters, noncharacters, and other entities in the standard. I will explore these files 
+in subsequent posts in order to expand our understanding of Unicode data through the 
+Unicode Character&nbsp;Database.</p>
+  </div>
+  <div class="tag-cloud">
+    <p>
+    </p>
+  </div>
+
+
+
+
+</article>
+
+    <footer>
+<p>&copy; Anshuman Pandey </p>
+<p>    Powered by <a href="http://getpelican.com" target="_blank">Pelican</a> - <a href="https://github.com/alexandrevicenzi/flex" target="_blank">Flex</a> theme by <a href="http://alexandrevicenzi.com" target="_blank">Alexandre Vicenzi</a>
+</p>    </footer>
+  </main>
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context" : "http://schema.org",
+  "@type" : "Blog",
+  "name": " pandey.github.io ",
+  "url" : "https://pandey.github.io",
+  "image": "/images/ap-initials.jpg",
+  "description": ""
+}
+</script>
+</body>
+</html>
